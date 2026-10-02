@@ -242,8 +242,62 @@
         await ghAPI(`contents/${p}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     }
 
-    function toB64(f) {
-        return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    const MAX_SIZE = 200 * 1024; // 200KB
+    const MAX_DIM = 1920;
+
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = async () => {
+                let { width: w, height: h } = img;
+
+                if (w > MAX_DIM || h > MAX_DIM) {
+                    const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                    w = Math.round(w * ratio);
+                    h = Math.round(h * ratio);
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, w, h);
+
+                let quality = 0.92;
+                let blob;
+
+                while (quality >= 0.3) {
+                    blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+                    if (blob.size <= MAX_SIZE) break;
+                    quality -= 0.05;
+                }
+
+                if (blob.size > MAX_SIZE) {
+                    const scale = Math.sqrt(MAX_SIZE / blob.size) * 0.95;
+                    canvas.width = Math.round(w * scale);
+                    canvas.height = Math.round(h * scale);
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => resolve({
+                    b64: reader.result.split(',')[1],
+                    size: blob.size,
+                    w: canvas.width,
+                    h: canvas.height
+                });
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+
+                URL.revokeObjectURL(img.src);
+            };
+            img.onerror = reject;
+            img.src = URL.createObjectURL(file);
+        });
     }
 
     // Gallery data - no auth needed (public repo, use raw URL)
@@ -279,16 +333,22 @@
                 pt.textContent = `Reading EXIF ${done + 1}/${total}...`;
                 const exifData = await extractExif(file);
 
-                const b64 = await toB64(file);
+                pt.textContent = `Compressing ${done + 1}/${total}...`;
+                const origSize = (file.size / 1024).toFixed(0);
+                const compressed = await compressImage(file);
+                const newSize = (compressed.size / 1024).toFixed(0);
+                console.log(`${safe}: ${origSize}KB → ${newSize}KB`);
+
                 pt.textContent = `Uploading ${done + 1}/${total}...`;
                 pf.style.width = `${((done + .5) / total) * 100}%`;
 
-                await putFile(fp, b64, `Add: ${safe}`);
+                await putFile(fp.replace(/\.\w+$/, '.jpg'), compressed.b64, `Add: ${safe}`);
 
+                const jpgPath = fp.replace(/\.\w+$/, '.jpg');
                 const photoCaption = cap || safe.replace(/[-_]/g, ' ').replace(/\.\w+$/, '');
                 const photoEntry = {
                     id: `p-${ts}-${Math.random().toString(36).slice(2, 7)}`,
-                    src: `${RAW_BASE}/${fp}`,
+                    src: `${RAW_BASE}/${jpgPath}`,
                     caption: photoCaption,
                     category: cat,
                     date: new Date().toISOString(),
