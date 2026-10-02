@@ -28,26 +28,33 @@
 </head>
 <body>
 
-    <div id="preloader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+    <div id="preloader">
+        <span class="pre-brand">Subroto Das</span>
+        <div class="ld-wrap"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+    </div>
 
     <nav id="navbar">
-        <a href="/" class="brand">
-            <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das" width="28" height="28">
-            <span class="brand-name">Subroto Das</span>
-        </a>
-        <div class="nav-right">
-            <div class="date-picker">
-                <i data-lucide="calendar" class="dp-icon"></i>
-                <input type="date" id="dateFrom" title="From">
-                <span class="dp-dash">–</span>
-                <input type="date" id="dateTo" title="To">
-                <button id="dateClear" class="dp-clear" title="Clear"><i data-lucide="x"></i></button>
+        <div class="nav-inner">
+            <a href="/" class="brand">
+                <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das" width="32" height="32">
+                <span class="brand-name">Subroto Das<span class="brand-dot"></span></span>
+            </a>
+            <div class="nav-right">
+                <div class="date-picker" id="datePicker">
+                    <i data-lucide="calendar" class="dp-icon"></i>
+                    <input type="date" id="dateFrom" title="From">
+                    <span class="dp-dash">–</span>
+                    <input type="date" id="dateTo" title="To">
+                    <button id="dateClear" class="dp-clear" title="Clear"><i data-lucide="x"></i></button>
+                </div>
+                <button class="filter-toggle" id="filterToggle" aria-label="Filter"><i data-lucide="sliders-horizontal"></i></button>
+                <button id="openUploadBtn" class="btn-upload" aria-label="Upload"><i data-lucide="plus"></i></button>
             </div>
-            <button id="openUploadBtn" class="btn-upload" aria-label="Upload"><i data-lucide="plus"></i></button>
         </div>
     </nav>
 
     <main id="gallery">
+        <div class="gallery-intro"><div class="gallery-divider"></div></div>
         <div id="timeline"></div>
         <div id="emptyState" class="empty-msg">
             <i data-lucide="camera"></i>
@@ -56,13 +63,15 @@
     </main>
 
     <footer>
-        <span>&copy; Subroto Das</span>
+        <div class="f-line"></div>
+        <span class="f-brand">Subroto Das</span>
         <div class="f-links">
             <a href="https://me.subromart.com" target="_blank" rel="noopener">Portfolio</a>
             <a href="https://systems.subromart.com" target="_blank" rel="noopener">Systems</a>
             <a href="https://subromart.com" target="_blank" rel="noopener">SubroMart</a>
             <a href="mailto:subroto.das@asgshop.com.bd">Email</a>
         </div>
+        <span class="f-copy">&copy; 2024 Subroto Das. All rights reserved.</span>
     </footer>
 
     <!-- Upload -->
