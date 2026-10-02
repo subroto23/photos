@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://photos.subromart.com/sitemap.xml
