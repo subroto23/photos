@@ -258,6 +258,22 @@
             grp.append(label, grid);
             tl.appendChild(grp);
         });
+
+        initScrollReveal();
+    }
+
+    // Scroll reveal with IntersectionObserver
+    function initScrollReveal() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.sg-item, .tl-label, .gallery-intro, footer').forEach(el => observer.observe(el));
     }
 
     // Lightbox
