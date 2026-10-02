@@ -29,7 +29,7 @@
     }
 
     // Init
-    window.addEventListener('load', () => { setTimeout(() => $('#preloader').classList.add('hidden'), 400); lucide.createIcons(); loadGallery(); });
+    window.addEventListener('load', () => { setTimeout(() => $('#preloader').classList.add('hidden'), 1800); lucide.createIcons(); loadGallery(); });
 
     // Navbar scroll effect
     let lastY = 0;
