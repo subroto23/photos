@@ -98,18 +98,52 @@
         } catch {} return m;
     }
 
-    // Compress
+    // Compress — guaranteed ≤200KB with best possible quality
+    const MAX_KB = 200;
     function compress(file) {
         return new Promise((res, rej) => {
             const img = new Image(); img.onload = async () => {
                 let { width: w, height: h } = img;
-                if (w > 1920 || h > 1920) { const s = Math.min(1920/w, 1920/h); w = Math.round(w*s); h = Math.round(h*s); }
-                const c = document.createElement('canvas'); c.width = w; c.height = h;
-                const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, w, h);
-                let q = 0.92, blob;
-                while (q >= 0.3) { blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q)); if (blob.size <= 200*1024) break; q -= 0.05; }
-                if (blob.size > 200*1024) { const s = Math.sqrt(200*1024/blob.size)*.95; c.width = Math.round(w*s); c.height = Math.round(h*s); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, c.width, c.height); blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82)); }
-                const rd = new FileReader(); rd.onload = () => res(rd.result.split(',')[1]); rd.onerror = rej; rd.readAsDataURL(blob); URL.revokeObjectURL(img.src);
+                const maxDim = 1920;
+                if (w > maxDim || h > maxDim) { const s = Math.min(maxDim/w, maxDim/h); w = Math.round(w*s); h = Math.round(h*s); }
+                const c = document.createElement('canvas');
+                const draw = (dw, dh) => { c.width = dw; c.height = dh; const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, dw, dh); };
+                const toBlob = q => new Promise(r => c.toBlob(r, 'image/jpeg', q));
+                const limit = MAX_KB * 1024;
+
+                draw(w, h);
+                let blob = await toBlob(0.92);
+                if (blob.size <= limit) { finish(blob); return; }
+
+                // Step 1: reduce quality (high range first for best detail)
+                for (let q = 0.85; q >= 0.5; q -= 0.05) {
+                    blob = await toBlob(q);
+                    if (blob.size <= limit) { finish(blob); return; }
+                }
+
+                // Step 2: scale down dimensions + quality sweep
+                for (let scale = 0.85; scale >= 0.4; scale -= 0.1) {
+                    const sw = Math.round(w * scale), sh = Math.round(h * scale);
+                    draw(sw, sh);
+                    for (let q = 0.82; q >= 0.45; q -= 0.08) {
+                        blob = await toBlob(q);
+                        if (blob.size <= limit) { finish(blob); return; }
+                    }
+                }
+
+                // Step 3: aggressive last resort
+                const ratio = Math.sqrt(limit / blob.size) * 0.9;
+                draw(Math.round(c.width * ratio), Math.round(c.height * ratio));
+                blob = await toBlob(0.6);
+                finish(blob);
+
+                function finish(b) {
+                    const rd = new FileReader();
+                    rd.onload = () => res(rd.result.split(',')[1]);
+                    rd.onerror = rej;
+                    rd.readAsDataURL(b);
+                    URL.revokeObjectURL(img.src);
+                }
             }; img.onerror = rej; img.src = URL.createObjectURL(file);
         });
     }
