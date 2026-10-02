@@ -252,6 +252,7 @@
 
                 item.append(img, over);
                 item.addEventListener('click', () => openLB(filtered.indexOf(photo)));
+                addTilt(item);
                 grid.appendChild(item);
             });
 
@@ -260,6 +261,22 @@
         });
 
         initScrollReveal();
+    }
+
+    // 3D tilt on hover
+    function addTilt(el) {
+        const max = 4;
+        el.addEventListener('mousemove', e => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            const rY = (x - 0.5) * max;
+            const rX = (0.5 - y) * max;
+            el.style.transform = `perspective(800px) rotateX(${rX}deg) rotateY(${rY}deg) scale(1.01)`;
+        });
+        el.addEventListener('mouseleave', () => {
+            el.style.transform = '';
+        });
     }
 
     // Scroll reveal with IntersectionObserver
