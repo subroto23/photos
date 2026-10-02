@@ -4,230 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Subroto Das Photo Gallery — Browse Photography Collection</title>
-    <meta name="description" content="Browse the official photo gallery of Subroto Das, Software Engineer at Apar's Classroom. Explore photos by category, date and camera metadata. High quality photography collection.">
-    <meta name="keywords" content="Subroto Das, Subroto, subroto das photos, subroto das gallery, software engineer, Apar's Classroom, photography, subromart, photo gallery, photos">
+    <meta name="description" content="Browse the official photo gallery of Subroto Das, Software Engineer at Apar's Classroom. Explore photos by date, category and camera metadata.">
+    <meta name="keywords" content="Subroto Das, photo gallery, photography, subromart, software engineer">
     <meta name="author" content="Subroto Das">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="theme-color" content="#b8952e">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://me.subromart.com/favicon.png">
+    <link rel="icon" type="image/png" href="https://me.subromart.com/favicon.png">
     <link rel="apple-touch-icon" href="https://me.subromart.com/favicon.png">
     <link rel="canonical" href="https://photos.subromart.com/">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://photos.subromart.com/">
-    <meta property="og:title" content="Subroto Das Photo Gallery — Browse Photography Collection">
-    <meta property="og:description" content="Browse the official photo gallery of Subroto Das. Explore photos by category, date and camera metadata.">
+    <meta property="og:title" content="Subroto Das Photo Gallery">
+    <meta property="og:description" content="Browse the photo gallery of Subroto Das, Software Engineer.">
     <meta property="og:image" content="https://me.subromart.com/assets/images/about.png">
     <meta property="og:site_name" content="Subroto Das Photos">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Subroto Das Photo Gallery — Browse Photography Collection">
-    <meta name="twitter:description" content="Browse the official photo gallery of Subroto Das. Explore photos by category, date and camera metadata.">
+    <meta name="twitter:title" content="Subroto Das Photo Gallery">
     <meta name="twitter:image" content="https://me.subromart.com/assets/images/about.png">
-    <script type="application/ld+json">{
-        "@context": "https://schema.org",
-        "@type": "ImageGallery",
-        "name": "Subroto Das Photo Gallery",
-        "description": "Browse the official photography collection of Subroto Das, Software Engineer at Apar's Classroom.",
-        "url": "https://photos.subromart.com",
-        "mainEntityOfPage": "https://photos.subromart.com",
-        "author": {
-            "@type": "Person",
-            "name": "Subroto Das",
-            "jobTitle": "Software Engineer",
-            "worksFor": {"@type": "Organization", "name": "Apar's Classroom"},
-            "url": "https://me.subromart.com",
-            "image": "https://me.subromart.com/assets/images/about.png",
-            "sameAs": [
-                "https://me.subromart.com",
-                "https://subromart.com",
-                "https://systems.subromart.com",
-                "https://photos.subromart.com",
-                "https://github.com/subroto23",
-                "https://www.linkedin.com/in/subroto-das-1714037/"
-            ]
-        }
-    }</script>
-    <script type="application/ld+json">{
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Subroto Das Photo Gallery",
-        "url": "https://photos.subromart.com",
-        "description": "Official photography collection of Subroto Das",
-        "publisher": {
-            "@type": "Person",
-            "name": "Subroto Das",
-            "url": "https://me.subromart.com"
-        }
-    }</script>
-    <script type="application/ld+json">{
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://subromart.com"},
-            {"@type": "ListItem", "position": 2, "name": "Portfolio", "item": "https://me.subromart.com"},
-            {"@type": "ListItem", "position": 3, "name": "Photo Gallery", "item": "https://photos.subromart.com"}
-        ]
-    }</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"ImageGallery","name":"Subroto Das Photo Gallery","url":"https://photos.subromart.com","author":{"@type":"Person","name":"Subroto Das","jobTitle":"Software Engineer","worksFor":{"@type":"Organization","name":"Apar's Classroom"},"url":"https://me.subromart.com","sameAs":["https://me.subromart.com","https://subromart.com","https://systems.subromart.com","https://github.com/subroto23"]}}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.maateen.me/kalpurush/font.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="preloader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>
+    <div id="preloader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
 
-    <!-- Navbar -->
-    <nav id="navbar" aria-label="Main navigation">
+    <nav id="navbar">
         <div class="nav-inner">
-            <a href="https://photos.subromart.com/" class="brand" title="Subroto Das Photo Gallery — Home">
-                <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das Logo" class="brand-icon" width="28" height="28">
-                <span class="brand-name">Subroto Das</span>
+            <a href="/" class="brand" title="Subroto Das Photo Gallery">
+                <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das" width="26" height="26">
+                <span>Gallery</span>
             </a>
-            <div class="nav-right" id="navMenu">
-                <a href="https://me.subromart.com" target="_blank" rel="noopener" class="nav-link" title="View Subroto Das Portfolio">Portfolio</a>
-                <a href="https://systems.subromart.com" target="_blank" rel="noopener" class="nav-link" title="Subroto Das Systems & Tools">Systems</a>
-                <a href="https://subromart.com" target="_blank" rel="noopener" class="nav-link" title="SubroMart — Software Company">SubroMart</a>
-                <button class="nav-upload" id="openUploadBtn" aria-label="Upload new photos"><i data-lucide="plus"></i><span>Upload</span></button>
+            <div class="nav-controls">
+                <div class="date-range">
+                    <input type="date" id="dateFrom" title="From date">
+                    <span class="date-sep">—</span>
+                    <input type="date" id="dateTo" title="To date">
+                    <button class="date-clear" id="dateClear" title="Clear dates"><i data-lucide="x" style="width:14px;height:14px"></i></button>
+                </div>
+                <button class="upload-btn" id="openUploadBtn" aria-label="Upload photos"><i data-lucide="plus"></i></button>
             </div>
-            <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span></button>
         </div>
     </nav>
 
-    <!-- Breadcrumb -->
-    <div class="container">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="https://subromart.com" title="SubroMart Home">Home</a>
-            <span class="bc-sep">/</span>
-            <a href="https://me.subromart.com" title="Subroto Das Portfolio">Portfolio</a>
-            <span class="bc-sep">/</span>
-            <span aria-current="page">Photo Gallery</span>
-        </nav>
-    </div>
-
-    <!-- Gallery -->
-    <main id="gallery" role="main">
-        <div class="container">
-            <div class="gallery-header">
-                <div class="gallery-title-row">
-                    <h1 class="gallery-title">Subroto Das Photo Gallery</h1>
-                    <span class="photo-count"><span id="totalPhotos">0</span> photos</span>
-                </div>
-                <p class="gallery-desc">Browse the complete photography collection. Search by date, category, or camera details.</p>
-                <div class="ornament"><span class="ornament-diamond"></span></div>
-                <div class="toolbar">
-                    <div class="pills" id="pillsWrap">
-                        <button class="pill active" data-filter="all">All</button>
-                        <span id="categoryFilters"></span>
-                    </div>
-                    <div class="search-box">
-                        <i data-lucide="search"></i>
-                        <input type="search" id="searchInput" placeholder="Search by caption, category or date..." aria-label="Search photos">
-                    </div>
-                </div>
-                <p class="search-hint">Try: "2024-01", "January", "Travel", or any date</p>
-            </div>
-            <div class="masonry" id="galleryGrid" role="list" aria-label="Photo gallery grid">
-                <div class="empty-state">
-                    <i data-lucide="image"></i>
-                    <p>No photos yet</p>
-                </div>
-            </div>
-            <div class="more-wrap" id="loadMoreContainer" style="display:none">
-                <button class="more-btn" id="loadMoreBtn" aria-label="Load more photos">Load More</button>
-            </div>
+    <main id="gallery">
+        <div class="masonry" id="galleryGrid"></div>
+        <div class="more-wrap" id="loadMoreContainer" style="display:none">
+            <button class="more-btn" id="loadMoreBtn">Load More</button>
+        </div>
+        <div class="empty" id="emptyState">
+            <i data-lucide="image"></i>
+            <p>No photos yet</p>
         </div>
     </main>
 
-    <!-- About Section for SEO -->
-    <section class="about-section" id="about">
-        <div class="container">
-            <h2 class="about-title">About This Gallery</h2>
-            <p class="about-text">This is the personal photo gallery of <a href="https://me.subromart.com" title="Subroto Das Portfolio">Subroto Das</a>, a Software Engineer at <strong>Apar's Classroom (ASG Shop)</strong>. Every photo includes original EXIF metadata — camera model, lens, aperture, shutter speed, ISO, and the date it was taken. You can search photos by any date, month, year, camera name, or browse by category.</p>
-            <div class="about-links">
-                <a href="https://me.subromart.com" title="Subroto Das — Portfolio & About">Portfolio</a>
-                <a href="https://systems.subromart.com" title="Systems & Tools by Subroto Das">Systems</a>
-                <a href="https://subromart.com" title="SubroMart — Software Company">SubroMart</a>
-                <a href="mailto:subroto.das@asgshop.com.bd" title="Email Subroto Das">Contact</a>
+    <footer>
+        <div class="footer-inner">
+            <span class="footer-copy">&copy; Subroto Das</span>
+            <div class="footer-links">
+                <a href="https://me.subromart.com" target="_blank" rel="noopener">Portfolio</a>
+                <a href="https://systems.subromart.com" target="_blank" rel="noopener">Systems</a>
+                <a href="https://subromart.com" target="_blank" rel="noopener">SubroMart</a>
+                <a href="mailto:subroto.das@asgshop.com.bd">Email</a>
             </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer role="contentinfo">
-        <div class="container footer-row">
-            <div class="footer-brand">
-                <a href="https://photos.subromart.com/" title="Subroto Das Photo Gallery">
-                    <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das Logo" class="footer-icon" width="20" height="20">
-                    <span>Subroto Das</span>
-                </a>
-            </div>
-            <nav class="footer-links" aria-label="Footer navigation">
-                <a href="https://photos.subromart.com/" title="Photo Gallery Home">Gallery</a>
-                <a href="https://me.subromart.com" target="_blank" rel="noopener" title="Subroto Das Portfolio">Portfolio</a>
-                <a href="https://systems.subromart.com" target="_blank" rel="noopener" title="Systems & Tools">Systems</a>
-                <a href="https://subromart.com" target="_blank" rel="noopener" title="SubroMart Software Company">SubroMart</a>
-                <a href="mailto:subroto.das@asgshop.com.bd" title="Email Subroto Das">Email</a>
-            </nav>
-            <p class="footer-copy">&copy; 2024 Subroto Das. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- Upload Modal -->
-    <div class="modal-bg" id="uploadModal" role="dialog" aria-modal="true" aria-label="Upload photos">
+    <div class="modal-bg" id="uploadModal">
         <div class="modal">
-            <div class="modal-top">
-                <h2>Upload Photos</h2>
-                <button class="modal-x" id="closeModal" aria-label="Close upload form"><i data-lucide="x"></i></button>
+            <div class="modal-head">
+                <h2>Upload</h2>
+                <button class="modal-x" id="closeModal"><i data-lucide="x"></i></button>
             </div>
-            <div class="pin-step" id="pinGate">
-                <h3>Enter PIN</h3>
-                <input type="password" id="pinInput" maxlength="6" placeholder="• • • • • •" class="pin-field" autocomplete="off" aria-label="Enter 6-digit PIN">
+            <div id="pinGate" class="modal-body pin-body">
+                <input type="password" id="pinInput" maxlength="6" placeholder="• • • • • •" class="pin-field" autocomplete="off">
                 <button class="btn" id="pinSubmitBtn">Unlock</button>
-                <p class="pin-err" id="pinError" role="alert">Wrong PIN</p>
-                <div id="tokenRow" style="display:none;margin-top:18px;text-align:left">
-                    <p style="font-size:.78rem;color:var(--text-2);margin-bottom:8px">First time setup — enter your GitHub token:</p>
-                    <input type="password" id="tokenInput" placeholder="ghp_... or github_pat_..." class="field" autocomplete="off" aria-label="GitHub personal access token">
-                    <button class="btn" id="tokenSaveBtn">Save & Continue</button>
+                <p class="pin-err" id="pinError">Wrong PIN</p>
+                <div id="tokenRow" style="display:none;margin-top:16px">
+                    <p class="hint">First time — enter GitHub token:</p>
+                    <input type="password" id="tokenInput" placeholder="ghp_... or github_pat_..." class="field" autocomplete="off">
+                    <button class="btn" id="tokenSaveBtn">Save</button>
                 </div>
             </div>
-            <div class="upload-step" id="uploadForm" style="display:none">
-                <input type="text" id="photoCategory" placeholder="Category (e.g. Travel, Nature)" class="field" aria-label="Photo category">
-                <textarea id="photoCaption" placeholder="Caption..." class="field field-area" aria-label="Photo caption"></textarea>
-                <div class="dropzone" id="dropZone" role="button" tabindex="0" aria-label="Drop images here or click to browse">
+            <div id="uploadForm" class="modal-body" style="display:none">
+                <input type="text" id="photoCategory" placeholder="Category (e.g. Travel)" class="field">
+                <textarea id="photoCaption" placeholder="Caption..." class="field ta"></textarea>
+                <div class="dropzone" id="dropZone">
                     <i data-lucide="image-plus"></i>
-                    <p>Drop images here or click to browse</p>
+                    <p>Drop or click to browse</p>
                     <input type="file" id="fileInput" multiple accept="image/*" hidden>
                 </div>
                 <div class="thumbs" id="previewGrid"></div>
                 <button class="btn" id="uploadBtn" disabled>Upload</button>
-                <div class="prog" id="uploadProgress" style="display:none" role="progressbar">
-                    <div class="prog-track"><div class="prog-bar" id="progressFill"></div></div>
-                    <p class="prog-label" id="progressText"></p>
+                <div class="prog" id="uploadProgress" style="display:none">
+                    <div class="prog-track"><div class="prog-fill" id="progressFill"></div></div>
+                    <p class="prog-text" id="progressText"></p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Lightbox -->
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
-        <button class="lb-x" id="lightboxClose" aria-label="Close photo viewer"><i data-lucide="x"></i></button>
-        <button class="lb-arr lb-left" id="lightboxPrev" aria-label="Previous photo"><i data-lucide="chevron-left"></i></button>
-        <button class="lb-arr lb-right" id="lightboxNext" aria-label="Next photo"><i data-lucide="chevron-right"></i></button>
-        <div class="lb-stage">
-            <img src="" alt="Gallery photo full view" id="lightboxImg">
+    <div class="lb" id="lightbox">
+        <button class="lb-close" id="lightboxClose"><i data-lucide="x"></i></button>
+        <button class="lb-nav lb-prev" id="lightboxPrev"><i data-lucide="chevron-left"></i></button>
+        <button class="lb-nav lb-next" id="lightboxNext"><i data-lucide="chevron-right"></i></button>
+        <div class="lb-center">
+            <img id="lightboxImg" alt="">
             <div class="lb-info">
-                <div class="lb-cap">
-                    <h3 id="lightboxCaption"></h3>
-                    <p id="lightboxMeta"></p>
-                </div>
+                <h3 id="lightboxCaption"></h3>
+                <p id="lightboxMeta"></p>
                 <div class="lb-exif" id="lightboxExif"></div>
             </div>
         </div>
     </div>
 
-    <div class="toasts" id="toastContainer" aria-live="polite"></div>
+    <div class="toasts" id="toastContainer"></div>
     <script src="script.js"></script>
 </body>
 </html>
