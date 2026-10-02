@@ -29,7 +29,25 @@
     }
 
     // Init
-    window.addEventListener('load', () => { setTimeout(() => $('#preloader').classList.add('hidden'), 200); lucide.createIcons(); loadGallery(); });
+    window.addEventListener('load', () => { setTimeout(() => $('#preloader').classList.add('hidden'), 400); lucide.createIcons(); loadGallery(); });
+
+    // Navbar scroll effect
+    let lastY = 0;
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        $('#navbar').classList.toggle('scrolled', y > 20);
+        lastY = y;
+    }, { passive: true });
+
+    // Mobile filter toggle
+    const filterBtn = $('#filterToggle');
+    const datePicker = $('#datePicker');
+    if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+            filterBtn.classList.toggle('active');
+            datePicker.classList.toggle('mobile-open');
+        });
+    }
 
     // Date range
     $('#dateFrom').addEventListener('change', applyFilter);
@@ -177,7 +195,7 @@
         Object.entries(groups).forEach(([month, items]) => {
             const grp = document.createElement('div'); grp.className = 'tl-group';
             const label = document.createElement('div'); label.className = 'tl-label';
-            label.innerHTML = `${month} <span>${items.length} photo${items.length > 1 ? 's' : ''}</span>`;
+            label.innerHTML = `<span class="tl-label-text">${month}</span><span class="tl-label-count">${items.length} photo${items.length > 1 ? 's' : ''}</span><span class="tl-label-line"></span>`;
 
             const grid = document.createElement('div'); grid.className = 'sg';
 
