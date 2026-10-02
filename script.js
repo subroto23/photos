@@ -219,10 +219,12 @@
     // ===== GitHub API (authenticated) =====
     async function ghAPI(path, opts = {}) {
         if (!ghToken) throw new Error('Not authenticated');
+        const { headers: extraHeaders, soft, ...fetchOpts } = opts;
         const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/${path}`, {
-            headers: { 'Authorization': `Bearer ${ghToken}`, 'Accept': 'application/vnd.github.v3+json', ...(opts.headers || {}) }, ...opts
+            ...fetchOpts,
+            headers: { 'Authorization': `Bearer ${ghToken}`, 'Accept': 'application/vnd.github.v3+json', ...(extraHeaders || {}) }
         });
-        if (!r.ok && !opts.soft) {
+        if (!r.ok && !soft) {
             const e = await r.json().catch(() => ({}));
             throw new Error(e.message || `API error ${r.status}`);
         }
