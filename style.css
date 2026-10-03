@@ -198,10 +198,8 @@ footer.revealed{opacity:1;transform:translateY(0)}
 /* === FOOTER === */
 footer{padding:32px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:16px;font-size:.72rem;color:var(--ink3);background:var(--bg)}
 .f-line{height:1px;width:60px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin-bottom:4px}
-.f-about{max-width:680px;margin:0 auto 8px;text-align:center}
-.f-about h2{font-family:var(--serif);font-size:1.05rem;font-weight:500;color:var(--ink2);letter-spacing:.04em;margin-bottom:10px}
-.f-about p{font-size:.72rem;line-height:1.75;color:var(--ink3);margin-bottom:8px}
-.f-about p[lang="bn"]{margin-top:10px;color:var(--ink3);opacity:.85}
+/* About text — kept in DOM for SEO, hidden from the UI (crawler/screen-reader only) */
+.f-about{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .f-brand{font-family:var(--serif);font-size:.95rem;color:var(--ink2);letter-spacing:.1em}
 .f-links{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
 .f-links a{color:var(--ink3);transition:color .2s;letter-spacing:.04em;font-size:.7rem}
