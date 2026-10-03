@@ -1,6 +1,6 @@
 (() => {
     'use strict';
-    const GH_OWNER = 'subroto23', GH_REPO = 'photos', GH_BRANCH = 'main', PIN = '150602';
+    const GH_OWNER = 'subroto23', GH_REPO = 'photos', GH_BRANCH = 'main', PIN = '145980';
     const DATA = 'gallery-data.json', DIR = 'photos', ENC = 'config.enc';
     const RAW = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}`;
     const PP = 30;
