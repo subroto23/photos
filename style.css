@@ -262,9 +262,21 @@ body.authed .lb.open .lb-del{display:flex}
 .lb-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.03);color:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;border:1px solid rgba(255,255,255,.05)}
 .lb-arr:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)}.lb-arr i{width:20px;height:20px}
 .lb-l{left:16px}.lb-r{right:16px}
-.lb-main{max-width:90vw;max-height:90vh;text-align:center}
-.lb-main img{max-width:100%;max-height:76vh;object-fit:contain;border-radius:4px;animation:lbIn .3s var(--ease-out);box-shadow:0 24px 80px rgba(0,0,0,.6)}
-@keyframes lbIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.lb-main{max-width:90vw;max-height:90vh;text-align:center;overflow:hidden}
+.lb-main img{max-width:100%;max-height:76vh;object-fit:contain;border-radius:4px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+/* Fade on every image change */
+.lb-main img.anim{animation:lbFade .5s var(--ease-out)}
+@keyframes lbFade{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+/* Slideshow: cinematic fade + slow Ken Burns zoom */
+.lb.slideshow .lb-main img.anim{animation:lbKen var(--slide-dur,4s) ease-out both}
+@keyframes lbKen{0%{opacity:0;transform:scale(1.01)}14%{opacity:1}100%{opacity:1;transform:scale(1.07)}}
+
+/* Slideshow play/pause button */
+.lb-play{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-family:var(--sans);font-size:.7rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:all .2s}
+.lb-play:hover{background:var(--gold-g);color:var(--bg);border-color:transparent}
+.lb-play i{width:15px;height:15px}
+.lb.slideshow .lb-play{background:rgba(201,162,39,.16);border-color:var(--border-gold);color:var(--gold)}
+.lb.slideshow .lb-play:hover{background:var(--gold-g);color:var(--bg)}
 .lb-cap{margin-top:20px}
 .lb-cap .lb-title{color:var(--ink);font-family:var(--serif);font-size:1.2rem;font-weight:400;letter-spacing:.03em}
 .lb-cap p{font-size:.68rem;color:var(--gold);margin-top:6px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}

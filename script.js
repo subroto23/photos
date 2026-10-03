@@ -592,7 +592,10 @@
     const lb = $('#lightbox');
     function openLB(i) {
         lbi = i; const p = filtered[i]; if (!p) return;
-        $('#lightboxImg').src = p.src; $('#lightboxImg').alt = p.alt || p.caption;
+        const img = $('#lightboxImg');
+        img.src = p.src; img.alt = p.alt || p.caption;
+        // re-trigger the fade / Ken Burns animation on every image change
+        img.classList.remove('anim'); void img.offsetWidth; img.classList.add('anim');
         $('#lightboxCaption').textContent = p.caption;
         const d = getPhotoDate(p);
         $('#lightboxMeta').textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -600,8 +603,25 @@
         [p.cameraMake && p.cameraModel ? `${p.cameraMake} ${p.cameraModel}` : p.cameraModel, p.lens, p.focalLength, p.aperture, p.exposure, p.iso].filter(Boolean).forEach(t => { const s = document.createElement('span'); s.textContent = t; ex.appendChild(s); });
         lb.classList.add('open'); document.body.style.overflow = 'hidden';
     }
-    function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; lbi = -1; }
+    function closeLB() { stopSlideshow(); lb.classList.remove('open'); document.body.style.overflow = ''; lbi = -1; }
     $('#lightboxClose').addEventListener('click', closeLB);
+
+    // === Slideshow / autoplay ===
+    const SLIDE_MS = 4000;
+    let slideTimer = null;
+    lb.style.setProperty('--slide-dur', (SLIDE_MS / 1000) + 's');
+    const isPlaying = () => slideTimer !== null;
+    function setPlayBtn(playing) { $('#lightboxPlay').innerHTML = `<i data-lucide="${playing ? 'pause' : 'play'}"></i><span>${playing ? 'Pause' : 'Slideshow'}</span>`; lucide.createIcons(); }
+    function startSlideshow() {
+        if (filtered.length < 2) { toast('Need more photos', 'info'); return; }
+        clearInterval(slideTimer);
+        lb.classList.add('slideshow');
+        slideTimer = setInterval(() => openLB((lbi + 1) % filtered.length), SLIDE_MS);
+        setPlayBtn(true);
+    }
+    function stopSlideshow() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } lb.classList.remove('slideshow'); if (document.getElementById('lightboxPlay')) setPlayBtn(false); }
+    function toggleSlideshow() { isPlaying() ? stopSlideshow() : startSlideshow(); }
+    $('#lightboxPlay').addEventListener('click', e => { e.stopPropagation(); toggleSlideshow(); });
 
     // Delete (only works with a valid PIN — Worker verifies server-side)
     async function deletePhoto(photo) {
@@ -621,9 +641,16 @@
     $('#lightboxDelete').addEventListener('click', e => { e.stopPropagation(); const p = filtered[lbi]; if (p) deletePhoto(p); });
 
     lb.addEventListener('click', e => { if (e.target === lb) closeLB(); });
-    $('#lightboxPrev').addEventListener('click', e => { e.stopPropagation(); if (lbi > 0) openLB(lbi-1); });
-    $('#lightboxNext').addEventListener('click', e => { e.stopPropagation(); if (lbi < filtered.length-1) openLB(lbi+1); });
-    document.addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') closeLB(); if (e.key === 'ArrowLeft' && lbi > 0) openLB(lbi-1); if (e.key === 'ArrowRight' && lbi < filtered.length-1) openLB(lbi+1); });
+    const navLB = step => { const n = lbi + step; if (n >= 0 && n < filtered.length) { openLB(n); if (isPlaying()) startSlideshow(); } };
+    $('#lightboxPrev').addEventListener('click', e => { e.stopPropagation(); navLB(-1); });
+    $('#lightboxNext').addEventListener('click', e => { e.stopPropagation(); navLB(1); });
+    document.addEventListener('keydown', e => {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLB();
+        else if (e.key === 'ArrowLeft') navLB(-1);
+        else if (e.key === 'ArrowRight') navLB(1);
+        else if (e.key === ' ') { e.preventDefault(); toggleSlideshow(); }
+    });
     let tx = 0;
     lb.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
     lb.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - tx; if (Math.abs(d) > 50) { d > 0 && lbi > 0 ? openLB(lbi-1) : d < 0 && lbi < filtered.length-1 && openLB(lbi+1); } }, { passive: true });
