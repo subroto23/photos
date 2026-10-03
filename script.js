@@ -588,14 +588,34 @@
         document.querySelectorAll('.sg-item, .tl-label, .gallery-intro, footer').forEach(el => observer.observe(el));
     }
 
-    // Lightbox
+    // Lightbox — two-layer crossfade for smooth, video-like transitions
     const lb = $('#lightbox');
+    const layers = [$('#lbLayerA'), $('#lbLayerB')];
+    let activeLayer = 0;
+    const SS_MOTIONS = ['ss-zin', 'ss-zout', 'ss-pl', 'ss-pr', 'ss-pu', 'ss-pd', 'ss-tilt', 'ss-blur'];
+    let lastMotion = -1;
+
+    function showImage(p) {
+        const onEl = layers[activeLayer];
+        const offEl = layers[activeLayer ^ 1];
+        offEl.onload = () => offEl.classList.add('on');
+        offEl.className = 'lb-layer';
+        offEl.src = p.src; offEl.alt = p.alt || p.caption;
+        void offEl.offsetWidth;
+        if (isPlaying()) {
+            let m; do { m = Math.floor(Math.random() * SS_MOTIONS.length); } while (SS_MOTIONS.length > 1 && m === lastMotion);
+            lastMotion = m;
+            offEl.classList.add(SS_MOTIONS[m]);
+        }
+        // if already cached, onload may not fire — show next frame
+        requestAnimationFrame(() => { if (offEl.complete) offEl.classList.add('on'); });
+        onEl.classList.remove('on');
+        activeLayer ^= 1;
+    }
+
     function openLB(i) {
         lbi = i; const p = filtered[i]; if (!p) return;
-        const img = $('#lightboxImg');
-        img.src = p.src; img.alt = p.alt || p.caption;
-        // re-trigger the fade / Ken Burns animation on every image change
-        img.classList.remove('anim'); void img.offsetWidth; img.classList.add('anim');
+        showImage(p);
         $('#lightboxCaption').textContent = p.caption;
         const d = getPhotoDate(p);
         $('#lightboxMeta').textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -607,7 +627,7 @@
     $('#lightboxClose').addEventListener('click', closeLB);
 
     // === Slideshow / autoplay ===
-    const SLIDE_MS = 4000;
+    const SLIDE_MS = 6000;
     let slideTimer = null;
     lb.style.setProperty('--slide-dur', (SLIDE_MS / 1000) + 's');
     const isPlaying = () => slideTimer !== null;
@@ -616,12 +636,51 @@
         if (filtered.length < 2) { toast('Need more photos', 'info'); return; }
         clearInterval(slideTimer);
         lb.classList.add('slideshow');
+        lb.classList.toggle('has-music', MUSIC_TRACKS.length > 0);
         slideTimer = setInterval(() => openLB((lbi + 1) % filtered.length), SLIDE_MS);
         setPlayBtn(true);
+        setSoundBtn();
+        startMusic();
     }
-    function stopSlideshow() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } lb.classList.remove('slideshow'); if (document.getElementById('lightboxPlay')) setPlayBtn(false); }
+    function stopSlideshow() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } lb.classList.remove('slideshow'); if (document.getElementById('lightboxPlay')) setPlayBtn(false); stopMusic(); }
     function toggleSlideshow() { isPlaying() ? stopSlideshow() : startSlideshow(); }
     $('#lightboxPlay').addEventListener('click', e => { e.stopPropagation(); toggleSlideshow(); });
+
+    // === Background music (add your own royalty-free / licensed tracks) ===
+    // Copyrighted Hindi songs cannot be bundled — drop your own .mp3 files in
+    // a /music folder and list them here, e.g. 'music/song1.mp3'.
+    const MUSIC_TRACKS = [
+        // 'music/track-1.mp3',
+        // 'music/track-2.mp3',
+    ];
+    const audio = $('#ssAudio');
+    let soundMuted = false;
+    function pickTrack() {
+        if (!MUSIC_TRACKS.length) return null;
+        return MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)];
+    }
+    function startMusic() {
+        const t = pickTrack();
+        if (!t) return; // no tracks configured yet
+        if (!audio.src || audio.ended || audio.paused) { audio.src = t; }
+        audio.muted = soundMuted;
+        audio.play().catch(() => {});
+    }
+    function stopMusic() { try { audio.pause(); } catch {} }
+    audio.addEventListener('ended', () => { const t = pickTrack(); if (t) { audio.src = t; audio.play().catch(() => {}); } });
+    function setSoundBtn() {
+        const b = $('#lightboxSound');
+        b.classList.toggle('muted', soundMuted);
+        b.innerHTML = `<i data-lucide="${soundMuted ? 'volume-x' : 'volume-2'}"></i>`;
+        lucide.createIcons();
+    }
+    $('#lightboxSound').addEventListener('click', e => {
+        e.stopPropagation();
+        soundMuted = !soundMuted;
+        audio.muted = soundMuted;
+        if (!soundMuted && audio.src && audio.paused && isPlaying()) audio.play().catch(() => {});
+        setSoundBtn();
+    });
 
     // Delete (only works with a valid PIN — Worker verifies server-side)
     async function deletePhoto(photo) {

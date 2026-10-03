@@ -151,9 +151,16 @@
         <button class="lb-del" id="lightboxDelete" title="Delete this photo" aria-label="Delete this photo"><i data-lucide="trash-2"></i></button>
         <button class="lb-arr lb-l" id="lightboxPrev"><i data-lucide="chevron-left"></i></button>
         <button class="lb-arr lb-r" id="lightboxNext"><i data-lucide="chevron-right"></i></button>
-        <button class="lb-play" id="lightboxPlay" title="Play slideshow" aria-label="Play slideshow"><i data-lucide="play"></i><span>Slideshow</span></button>
+        <div class="lb-controls">
+            <button class="lb-ctrl lb-play" id="lightboxPlay" title="Play slideshow" aria-label="Play slideshow"><i data-lucide="play"></i><span>Slideshow</span></button>
+            <button class="lb-ctrl lb-sound" id="lightboxSound" title="Toggle sound" aria-label="Toggle sound"><i data-lucide="volume-2"></i></button>
+        </div>
+        <audio id="ssAudio" preload="none"></audio>
         <div class="lb-main">
-            <img id="lightboxImg" alt="">
+            <div class="lb-stage">
+                <img class="lb-layer on" id="lbLayerA" alt="">
+                <img class="lb-layer" id="lbLayerB" alt="">
+            </div>
             <div class="lb-cap">
                 <div class="lb-title" id="lightboxCaption"></div>
                 <p id="lightboxMeta"></p>
