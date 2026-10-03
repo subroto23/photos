@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Subroto Das — Photography Gallery | Subroto Das Photos</title>
+    <meta name="description" content="Official photography gallery of Subroto Das, Software Engineer at Apar's Classroom. Explore photos by Subroto Das — portraits, nature, street, travel and more, with capture dates and camera metadata.">
+    <meta name="author" content="Subroto Das">
+    <meta name="keywords" content="Subroto Das, Subroto Das photography, Subroto Das photos, Subroto Das gallery, Subroto Das photographer, Subroto, Subroto Das Software Engineer, Subroto Das Apar's Classroom, photos.subromart.com, SubroMart, Subroto Das portfolio">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#b8952e">
+    <link rel="icon" type="image/png" href="https://me.subromart.com/favicon.png">
+    <link rel="apple-touch-icon" href="https://me.subromart.com/favicon.png">
+    <link rel="canonical" href="https://photos.subromart.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Subroto Das Photography">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://photos.subromart.com/">
+    <meta property="og:title" content="Subroto Das — Photography Gallery">
+    <meta property="og:description" content="Official photography gallery of Subroto Das, Software Engineer. Portraits, nature, street, travel and more.">
+    <meta property="og:image" content="https://me.subromart.com/assets/images/about.png">
+    <meta property="og:image:alt" content="Subroto Das Photography Gallery">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Subroto Das — Photography Gallery">
+    <meta name="twitter:description" content="Official photography gallery of Subroto Das, Software Engineer.">
+    <meta name="twitter:image" content="https://me.subromart.com/assets/images/about.png">
+    <meta name="twitter:image:alt" content="Subroto Das Photography Gallery">
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://photos.subromart.com/#website","url":"https://photos.subromart.com/","name":"Subroto Das Photography","description":"Official photography gallery of Subroto Das","inLanguage":"en","publisher":{"@id":"https://photos.subromart.com/#person"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://photos.subromart.com/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"Person","@id":"https://photos.subromart.com/#person","name":"Subroto Das","givenName":"Subroto","familyName":"Das","jobTitle":"Software Engineer","email":"subroto.das@asgshop.com.bd","image":"https://me.subromart.com/assets/images/about.png","worksFor":{"@type":"Organization","name":"Apar's Classroom"},"url":"https://me.subromart.com","mainEntityOfPage":"https://photos.subromart.com/","sameAs":["https://me.subromart.com","https://subromart.com","https://systems.subromart.com","https://github.com/subroto23"]},{"@type":"ImageGallery","@id":"https://photos.subromart.com/#gallery","name":"Subroto Das Photo Gallery","url":"https://photos.subromart.com/","isPartOf":{"@id":"https://photos.subromart.com/#website"},"about":{"@id":"https://photos.subromart.com/#person"},"author":{"@id":"https://photos.subromart.com/#person"},"creator":{"@id":"https://photos.subromart.com/#person"}}]}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="pre-logo">
+            <div class="pre-logo-ring"></div>
+            <div class="pre-logo-inner"></div>
+            <div class="pre-logo-dot"></div>
+        </div>
+        <span class="pre-brand">Subroto Das</span>
+        <div class="pre-line"></div>
+        <span class="pre-sub">Photography Gallery</span>
+        <div class="ld-wrap"><div class="ld"></div><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+    </div>
+
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="/" class="brand">
+                <img src="https://me.subromart.com/assets/icons/favicon.svg" alt="Subroto Das" width="32" height="32">
+                <span class="brand-name">Subroto Das<span class="brand-dot"></span></span>
+            </a>
+            <div class="nav-right">
+                <div class="date-picker" id="datePicker">
+                    <i data-lucide="calendar" class="dp-icon"></i>
+                    <input type="date" id="dateFrom" title="From">
+                    <span class="dp-dash">–</span>
+                    <input type="date" id="dateTo" title="To">
+                    <button id="dateClear" class="dp-clear" title="Clear"><i data-lucide="x"></i></button>
+                </div>
+                <button class="filter-toggle" id="filterToggle" aria-label="Filter"><i data-lucide="sliders-horizontal"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="gallery">
+        <header class="gallery-intro">
+            <h1 class="g-title">Subroto Das <span>Photography</span></h1>
+            <p class="g-sub">The official photo gallery of <strong>Subroto Das</strong>, Software Engineer at Apar's Classroom — a personal collection of portraits, nature, street, travel and everyday moments captured by Subroto Das.</p>
+            <div class="gallery-divider"></div>
+        </header>
+        <div id="timeline"></div>
+        <div id="emptyState" class="empty-msg">
+            <i data-lucide="camera"></i>
+            <p>No photos</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="f-line"></div>
+        <span class="f-brand">Subroto Das</span>
+        <div class="f-links">
+            <a href="https://me.subromart.com" target="_blank" rel="noopener">Portfolio</a>
+            <a href="https://systems.subromart.com" target="_blank" rel="noopener">Systems</a>
+            <a href="https://subromart.com" target="_blank" rel="noopener">SubroMart</a>
+            <a href="mailto:subroto.das@asgshop.com.bd">Email</a>
+        </div>
+        <span class="f-copy">&copy; 2024 Subroto Das. All rights reserved.</span>
+    </footer>
+
+    <!-- Upload (hidden route) -->
+    <div class="overlay" id="uploadModal">
+        <div class="modal upload-modal">
+            <div class="m-head"><h2>Upload</h2><button id="closeModal" class="m-x"><i data-lucide="x"></i></button></div>
+            <div id="pinGate" class="m-body m-center">
+                <input type="password" id="pinInput" maxlength="6" placeholder="• • • • • •" class="pin" autocomplete="off">
+                <button class="btn" id="pinSubmitBtn">Unlock</button>
+                <p class="err" id="pinError">Wrong PIN</p>
+            </div>
+            <div id="uploadForm" class="m-body" style="display:none">
+                <!-- Combined Category + Caption Combobox -->
+                <div class="combo-group">
+                    <label class="combo-label">Category</label>
+                    <div class="combo-wrap" id="catComboWrap">
+                        <input type="text" id="photoCategory" placeholder="Select or type category..." class="combo-input" autocomplete="off">
+                        <button class="combo-toggle" id="catToggle"><i data-lucide="chevron-down"></i></button>
+                        <div class="combo-dropdown" id="catDropdown"></div>
+                    </div>
+                </div>
+                <div class="combo-group">
+                    <label class="combo-label">Caption</label>
+                    <div class="combo-wrap" id="capComboWrap">
+                        <div class="combo-lang-tabs">
+                            <button class="lang-tab active" data-lang="bn">বাংলা</button>
+                            <button class="lang-tab" data-lang="en">English</button>
+                        </div>
+                        <input type="text" id="photoCaption" placeholder="Select or type caption..." class="combo-input" autocomplete="off">
+                        <button class="combo-toggle" id="capToggle"><i data-lucide="chevron-down"></i></button>
+                        <div class="combo-dropdown" id="capDropdown"></div>
+                    </div>
+                </div>
+                <div class="drop" id="dropZone">
+                    <i data-lucide="image-plus"></i>
+                    <p>Drop or tap to browse</p>
+                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                </div>
+                <div class="thumbs" id="previewGrid"></div>
+                <button class="btn" id="uploadBtn" disabled>Upload</button>
+                <div class="prog" id="uploadProgress" style="display:none">
+                    <div class="prog-bar"><div class="prog-fill" id="progressFill"></div></div>
+                    <p class="prog-txt" id="progressText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lb" id="lightbox">
+        <button class="lb-x" id="lightboxClose"><i data-lucide="x"></i></button>
+        <button class="lb-arr lb-l" id="lightboxPrev"><i data-lucide="chevron-left"></i></button>
+        <button class="lb-arr lb-r" id="lightboxNext"><i data-lucide="chevron-right"></i></button>
+        <div class="lb-main">
+            <img id="lightboxImg" alt="">
+            <div class="lb-cap">
+                <h3 id="lightboxCaption"></h3>
+                <p id="lightboxMeta"></p>
+                <div class="lb-exif" id="lightboxExif"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toasts" id="toastContainer"></div>
+    <script src="captions-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

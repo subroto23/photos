@@ -1,0 +1,17 @@
+name = "subro-gallery-upload"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# Use the free *.workers.dev URL (no custom domain / zone needed).
+workers_dev = true
+
+# Public (non-secret) config
+[vars]
+GH_OWNER = "subroto23"
+GH_REPO = "photos"
+GH_BRANCH = "main"
+ALLOWED_ORIGIN = "https://photos.subromart.com"
+
+# SECRETS — do NOT put them here. Set them from the terminal:
+#   wrangler secret put GH_TOKEN      (paste your fine-grained GitHub PAT)
+#   wrangler secret put UPLOAD_PIN    (type 145980)
