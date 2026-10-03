@@ -257,6 +257,10 @@ footer{padding:32px;border-top:1px solid var(--border);display:flex;flex-directi
 .lb.open{display:flex}
 .lb-x{position:absolute;top:16px;right:16px;z-index:2;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.04);color:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;border:1px solid rgba(255,255,255,.06)}
 .lb-x:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}.lb-x i{width:16px;height:16px}
+.lb-del{position:absolute;top:16px;left:16px;z-index:2;width:40px;height:40px;border-radius:50%;background:rgba(232,77,77,.12);color:#e84d4d;display:none;align-items:center;justify-content:center;transition:all .2s;border:1px solid rgba(232,77,77,.25)}
+.lb-del:hover{background:rgba(232,77,77,.9);color:#fff;border-color:transparent}
+.lb-del i{width:16px;height:16px}
+body.authed .lb.open .lb-del{display:flex}
 .lb-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.03);color:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s;border:1px solid rgba(255,255,255,.05)}
 .lb-arr:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)}.lb-arr i{width:20px;height:20px}
 .lb-l{left:16px}.lb-r{right:16px}

@@ -196,6 +196,43 @@ export default {
         return json(env, { ok: true, total: gd.photos.length }, 200, origin);
       }
 
+      // Delete one photo (file + data entry + sitemap)
+      if (url.pathname === '/api/delete') {
+        const { id, path } = body;
+        if (!id && !path) return json(env, { error: 'Missing id/path' }, 400, origin);
+
+        // Delete the image file (best effort)
+        if (path) {
+          if (!/^photos\/[A-Za-z0-9._\/-]+\.jpg$/.test(path)) return json(env, { error: 'Invalid path' }, 400, origin);
+          const r = await gh(env, `contents/${path}?ref=${env.GH_BRANCH}`);
+          if (r.ok) {
+            const fsha = (await r.json()).sha;
+            await gh(env, `contents/${path}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: `Delete: ${path.split('/').pop()}`, sha: fsha, branch: env.GH_BRANCH }),
+            });
+          }
+        }
+
+        // Remove the entry from gallery-data.json
+        const { text, sha } = await getContents(env, 'gallery-data.json');
+        let gd = { photos: [] };
+        if (text) { try { gd = JSON.parse(text); } catch {} }
+        if (!Array.isArray(gd.photos)) gd.photos = [];
+        const before = gd.photos.length;
+        gd.photos = gd.photos.filter(p => {
+          const byId = id && p.id === id;
+          const byPath = path && typeof p.src === 'string' && p.src.endsWith(path);
+          return !(byId || byPath);
+        });
+        if (gd.photos.length !== before) {
+          await putFile(env, 'gallery-data.json', b64encode(JSON.stringify(gd, null, 2)), 'Gallery -1', sha);
+          await putFile(env, 'sitemap.xml', b64encode(buildSitemap(gd.photos)), `Sitemap: ${gd.photos.length} images`);
+        }
+        return json(env, { ok: true, total: gd.photos.length, removed: before - gd.photos.length }, 200, origin);
+      }
+
       return json(env, { error: 'Not found' }, 404, origin);
     } catch (e) {
       return json(env, { error: e.message || 'Server error' }, 500, origin);

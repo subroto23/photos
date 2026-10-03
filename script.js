@@ -78,6 +78,7 @@
         try {
             userPin = pin;
             await worker('/api/auth', {});
+            document.body.classList.add('authed');
             toast('Unlocked', 'success');
             $('#pinGate').style.display = 'none'; $('#uploadForm').style.display = 'block'; lucide.createIcons();
         } catch (e) {
@@ -601,6 +602,24 @@
     }
     function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; lbi = -1; }
     $('#lightboxClose').addEventListener('click', closeLB);
+
+    // Delete (only works with a valid PIN — Worker verifies server-side)
+    async function deletePhoto(photo) {
+        if (!userPin || !photo) { toast('Unlock with PIN first', 'error'); return; }
+        if (!confirm('Delete this photo permanently? This cannot be undone.')) return;
+        const path = photo.src && photo.src.startsWith(RAW + '/') ? photo.src.slice(RAW.length + 1) : null;
+        const delBtn = $('#lightboxDelete'); delBtn.disabled = true;
+        try {
+            await worker('/api/delete', { id: photo.id, path });
+            photos = photos.filter(p => p !== photo);
+            toast('Photo deleted', 'success');
+            closeLB();
+            updateSEO(); buildCatFilter(); applyFilter();
+        } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+        delBtn.disabled = false;
+    }
+    $('#lightboxDelete').addEventListener('click', e => { e.stopPropagation(); const p = filtered[lbi]; if (p) deletePhoto(p); });
+
     lb.addEventListener('click', e => { if (e.target === lb) closeLB(); });
     $('#lightboxPrev').addEventListener('click', e => { e.stopPropagation(); if (lbi > 0) openLB(lbi-1); });
     $('#lightboxNext').addEventListener('click', e => { e.stopPropagation(); if (lbi < filtered.length-1) openLB(lbi+1); });
