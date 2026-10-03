@@ -605,19 +605,34 @@
     let activeLayer = 0;
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // How the incoming image enters (start state: offset 0)
-    const ENTERS = [
-        { t: 'scale(1.00)' }, { t: 'scale(1.28)' }, { t: 'scale(0.86)' },
-        { t: 'translateX(8%) scale(1.06)' }, { t: 'translateX(-8%) scale(1.06)' },
-        { t: 'translateY(8%) scale(1.06)' }, { t: 'translateY(-8%) scale(1.06)' },
-        { t: 'translate(7%,7%) scale(1.08)' }, { t: 'translate(-7%,-7%) scale(1.08)' },
-        { t: 'translate(7%,-7%) scale(1.08)' }, { t: 'translate(-7%,7%) scale(1.08)' },
-        { t: 'scale(1.1) rotate(3deg)' }, { t: 'scale(1.1) rotate(-3deg)' },
-        { t: 'scale(1.12)', f: 'blur(20px)' }, { t: 'scale(0.95)', f: 'blur(14px)' },
-        { t: 'scale(1.08)', f: 'blur(10px) brightness(1.5)' }, { t: 'scale(1.1)', f: 'brightness(0.3)' },
-        { t: 'perspective(1200px) rotateY(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateY(-16deg) scale(1.06)' },
-        { t: 'perspective(1200px) rotateX(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateX(-16deg) scale(1.06)' },
+    // Named transition presets (PowerPoint-style). User picks which ones are
+    // in the random pool; "enters" = possible start states for that style.
+    const TRANSITIONS = [
+        { id: 'fade', name: 'Fade', enters: [{ t: 'scale(1.0)' }] },
+        { id: 'zoomin', name: 'Zoom In', enters: [{ t: 'scale(0.86)' }] },
+        { id: 'zoomout', name: 'Zoom Out', enters: [{ t: 'scale(1.28)' }] },
+        { id: 'slideL', name: 'Slide Left', enters: [{ t: 'translateX(8%) scale(1.06)' }] },
+        { id: 'slideR', name: 'Slide Right', enters: [{ t: 'translateX(-8%) scale(1.06)' }] },
+        { id: 'slideU', name: 'Slide Up', enters: [{ t: 'translateY(8%) scale(1.06)' }] },
+        { id: 'slideD', name: 'Slide Down', enters: [{ t: 'translateY(-8%) scale(1.06)' }] },
+        { id: 'diag', name: 'Diagonal', enters: [{ t: 'translate(7%,7%) scale(1.08)' }, { t: 'translate(-7%,-7%) scale(1.08)' }, { t: 'translate(7%,-7%) scale(1.08)' }, { t: 'translate(-7%,7%) scale(1.08)' }] },
+        { id: 'rotate', name: 'Rotate', enters: [{ t: 'scale(1.1) rotate(3deg)' }, { t: 'scale(1.1) rotate(-3deg)' }] },
+        { id: 'blur', name: 'Blur', enters: [{ t: 'scale(1.12)', f: 'blur(20px)' }, { t: 'scale(0.95)', f: 'blur(14px)' }] },
+        { id: 'glow', name: 'Glow', enters: [{ t: 'scale(1.08)', f: 'blur(10px) brightness(1.5)' }] },
+        { id: 'darkfade', name: 'Dark Fade', enters: [{ t: 'scale(1.1)', f: 'brightness(0.3)' }] },
+        { id: 'flipH', name: 'Flip Horizontal', enters: [{ t: 'perspective(1200px) rotateY(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateY(-16deg) scale(1.06)' }] },
+        { id: 'flipV', name: 'Flip Vertical', enters: [{ t: 'perspective(1200px) rotateX(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateX(-16deg) scale(1.06)' }] },
     ];
+    const TRANS_BY_ID = Object.fromEntries(TRANSITIONS.map(t => [t.id, t]));
+    let enabledFx = new Set(TRANSITIONS.map(t => t.id));
+    try { const s = JSON.parse(localStorage.getItem('ss-fx') || 'null'); if (Array.isArray(s)) enabledFx = new Set(s.filter(id => TRANS_BY_ID[id])); } catch {}
+    const saveFx = () => { try { localStorage.setItem('ss-fx', JSON.stringify([...enabledFx])); } catch {} };
+    function pickEnter() {
+        const ids = [...enabledFx];
+        if (!ids.length) return { t: 'scale(1.0)' }; // nothing selected → plain fade
+        const tr = TRANS_BY_ID[ids[rnd(ids.length)]];
+        return tr.enters[rnd(tr.enters.length)];
+    }
     // Continuous Ken-Burns drift (start → end over the whole slide)
     const MOTIONS = [
         { s: 'scale(1.06)', e: 'scale(1.17)' }, { s: 'scale(1.17)', e: 'scale(1.06)' },
@@ -650,7 +665,7 @@
                 inEl.animate([{ opacity: 0, transform: 'scale(1.02)' }, { opacity: 1, transform: 'scale(1)' }],
                     { duration: reduceMotion ? 300 : dur, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'both' });
             } else {
-                const en = ENTERS[rnd(ENTERS.length)], mo = MOTIONS[rnd(MOTIONS.length)], ez = EASES[rnd(EASES.length)];
+                const en = pickEnter(), mo = MOTIONS[rnd(MOTIONS.length)], ez = EASES[rnd(EASES.length)];
                 inEl.animate([
                     { opacity: 0, transform: en.t, filter: en.f || 'blur(0px)', offset: 0, easing: 'cubic-bezier(.22,.61,.36,1)' },
                     { opacity: 1, transform: mo.s, filter: 'blur(0px) brightness(1)', offset: 0.16, easing: ez },
@@ -677,7 +692,7 @@
         [p.cameraMake && p.cameraModel ? `${p.cameraMake} ${p.cameraModel}` : p.cameraModel, p.lens, p.focalLength, p.aperture, p.exposure, p.iso].filter(Boolean).forEach(t => { const s = document.createElement('span'); s.textContent = t; ex.appendChild(s); });
         lb.classList.add('open'); document.body.style.overflow = 'hidden';
     }
-    function closeLB() { stopSlideshow(); lb.classList.remove('open'); document.body.style.overflow = ''; lbi = -1; }
+    function closeLB() { stopSlideshow(); closeFxPanel(); lb.classList.remove('open'); document.body.style.overflow = ''; lbi = -1; }
     $('#lightboxClose').addEventListener('click', closeLB);
 
     // === Slideshow / autoplay ===
@@ -810,14 +825,40 @@
             });
         } catch (err) { box.innerHTML = '<div class="mp-empty">Search failed</div>'; }
     }
-    // Close panel when slideshow stops
     function closeMusicPanel() { musicPanel.classList.remove('open'); $('#lightboxMusicBtn').classList.remove('active'); }
-    // Close the search panel when clicking anywhere outside it (capture phase
-    // so it fires even for handlers that stop propagation)
+
+    // === Transition picker (PowerPoint-style) ===
+    const fxPanel = $('#fxPanel');
+    function renderFx() {
+        const g = $('#fxGrid'); g.innerHTML = '';
+        TRANSITIONS.forEach(tr => {
+            const b = document.createElement('button');
+            b.className = 'fx-chip' + (enabledFx.has(tr.id) ? ' on' : '');
+            b.textContent = tr.name;
+            b.addEventListener('click', ev => {
+                ev.stopPropagation();
+                if (enabledFx.has(tr.id)) enabledFx.delete(tr.id); else enabledFx.add(tr.id);
+                b.classList.toggle('on');
+                saveFx();
+            });
+            g.appendChild(b);
+        });
+    }
+    function closeFxPanel() { fxPanel.classList.remove('open'); $('#lightboxFxBtn').classList.remove('active'); }
+    $('#lightboxFxBtn').addEventListener('click', e => {
+        e.stopPropagation();
+        const open = fxPanel.classList.toggle('open');
+        $('#lightboxFxBtn').classList.toggle('active', open);
+        if (open) { renderFx(); closeMusicPanel(); }
+    });
+    $('#fxAll').addEventListener('click', e => { e.stopPropagation(); enabledFx = new Set(TRANSITIONS.map(t => t.id)); saveFx(); renderFx(); });
+    $('#fxNone').addEventListener('click', e => { e.stopPropagation(); enabledFx = new Set(); saveFx(); renderFx(); });
+    fxPanel.addEventListener('click', e => e.stopPropagation());
+
+    // Close open panels when clicking outside (capture phase catches all clicks)
     document.addEventListener('click', e => {
-        if (!musicPanel.classList.contains('open')) return;
-        if (e.target.closest('#musicPanel') || e.target.closest('#lightboxMusicBtn')) return;
-        closeMusicPanel();
+        if (musicPanel.classList.contains('open') && !e.target.closest('#musicPanel') && !e.target.closest('#lightboxMusicBtn')) closeMusicPanel();
+        if (fxPanel.classList.contains('open') && !e.target.closest('#fxPanel') && !e.target.closest('#lightboxFxBtn')) closeFxPanel();
     }, true);
 
     // Delete (only works with a valid PIN — Worker verifies server-side)

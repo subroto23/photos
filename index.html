@@ -157,8 +157,13 @@
         <button class="lb-arr lb-r" id="lightboxNext"><i data-lucide="chevron-right"></i></button>
         <div class="lb-controls">
             <button class="lb-ctrl lb-play" id="lightboxPlay" title="Play slideshow" aria-label="Play slideshow"><i data-lucide="play"></i><span>Slideshow</span></button>
+            <button class="lb-ctrl lb-fx" id="lightboxFxBtn" title="Choose transitions" aria-label="Transitions"><i data-lucide="wand-2"></i></button>
             <button class="lb-ctrl lb-music" id="lightboxMusicBtn" title="Change / search music" aria-label="Music"><i data-lucide="music"></i></button>
             <button class="lb-ctrl lb-sound" id="lightboxSound" title="Toggle sound" aria-label="Toggle sound"><i data-lucide="volume-2"></i></button>
+        </div>
+        <div class="lb-fx-panel" id="fxPanel">
+            <div class="fx-head"><span>Transitions</span><div><button id="fxAll">All</button><button id="fxNone">None</button></div></div>
+            <div class="fx-grid" id="fxGrid"></div>
         </div>
         <div class="lb-music-panel" id="musicPanel">
             <div class="mp-head">

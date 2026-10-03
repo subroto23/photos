@@ -279,7 +279,20 @@ body.authed .lb.open .lb-del{display:flex}
 .lb.slideshow .lb-play{background:rgba(201,162,39,.16);border-color:var(--border-gold);color:var(--gold)}
 .lb.slideshow .lb-play:hover{background:var(--gold-g);color:var(--bg)}
 .lb-sound.muted{color:var(--ink3)}
-.lb-music.active{background:rgba(201,162,39,.16);border-color:var(--border-gold);color:var(--gold)}
+.lb-music.active,.lb-fx.active{background:rgba(201,162,39,.16);border-color:var(--border-gold);color:var(--gold)}
+
+/* Transition picker panel (PowerPoint-style) */
+.lb-fx-panel{position:absolute;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);z-index:4;width:min(460px,92vw);background:var(--surface);border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow-lg);padding:14px;display:none;opacity:0;transition:opacity .2s,transform .2s}
+.lb-fx-panel.open{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+.fx-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.fx-head>span{font-size:.7rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.fx-head>div{display:flex;gap:6px}
+.fx-head button{font-size:.58rem;padding:4px 11px;border-radius:100px;border:1px solid var(--border);color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;transition:all .2s}
+.fx-head button:hover{color:var(--gold);border-color:var(--border-gold);background:var(--gold-soft)}
+.fx-grid{display:flex;flex-wrap:wrap;gap:6px}
+.fx-chip{padding:7px 13px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--ink3);font-size:.7rem;font-weight:500;letter-spacing:.02em;transition:all .15s}
+.fx-chip:hover{color:var(--ink2);border-color:var(--border2)}
+.fx-chip.on{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
 
 /* Music search panel */
 .lb-music-panel{position:absolute;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);z-index:4;width:min(420px,92vw);background:var(--surface);border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px;display:none;opacity:0;transition:opacity .2s,transform .2s}
