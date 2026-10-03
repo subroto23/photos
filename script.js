@@ -194,13 +194,74 @@
             pt.textContent = 'Done!'; toast(`${total} photo(s) uploaded!`, 'success');
             picks = []; $('#previewGrid').innerHTML = ''; $('#photoCaption').value = ''; $('#photoCategory').value = ''; fi.value = '';
             setTimeout(() => { pp.style.display = 'none'; pf.style.width = '0%'; }, 800);
-            photos = gd.photos; applyFilter();
+            photos = gd.photos; updateSEO(); applyFilter();
         } catch (e) { toast(`Failed: ${e.message}`, 'error'); pt.textContent = 'Failed'; }
         $('#uploadBtn').disabled = false;
     });
 
+    // SEO — default text helpers
+    function seoTitle(p) {
+        if (p.caption && p.caption.trim()) return p.caption.trim();
+        const d = getPhotoDate(p);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const cam = p.cameraModel ? ` — ${p.cameraModel}` : '';
+        const cat = p.category && p.category !== 'General' ? `${p.category} ` : '';
+        return `${cat}Photo by Subroto Das — ${dateStr}${cam}`;
+    }
+    function seoAlt(p) {
+        if (p.alt && p.alt.trim()) return p.alt.trim();
+        return `${seoTitle(p)} | Subroto Das Photography`;
+    }
+    function seoDesc(p) {
+        const parts = [seoTitle(p)];
+        if (p.cameraModel) parts.push(`Shot on ${p.cameraMake ? p.cameraMake + ' ' : ''}${p.cameraModel}`);
+        if (p.aperture) parts.push(p.aperture);
+        if (p.iso) parts.push(p.iso);
+        if (p.focalLength) parts.push(p.focalLength);
+        return parts.join(' · ');
+    }
+
+    // Dynamic JSON-LD for all photos
+    function updateSEO() {
+        let el = document.getElementById('dynamic-jsonld');
+        if (!el) { el = document.createElement('script'); el.id = 'dynamic-jsonld'; el.type = 'application/ld+json'; document.head.appendChild(el); }
+
+        const imageObjects = photos.map(p => {
+            const obj = {
+                '@type': 'ImageObject',
+                contentUrl: p.src,
+                name: seoTitle(p),
+                description: seoDesc(p),
+                author: { '@type': 'Person', name: 'Subroto Das', url: 'https://me.subromart.com' },
+                datePublished: p.date,
+                thumbnailUrl: p.src
+            };
+            if (p.dateTaken) obj.dateCreated = p.dateTaken;
+            if (p.cameraModel) obj.exifData = [
+                ...(p.cameraMake ? [{ '@type': 'PropertyValue', name: 'cameraMake', value: p.cameraMake }] : []),
+                { '@type': 'PropertyValue', name: 'cameraModel', value: p.cameraModel },
+                ...(p.aperture ? [{ '@type': 'PropertyValue', name: 'fNumber', value: p.aperture }] : []),
+                ...(p.iso ? [{ '@type': 'PropertyValue', name: 'isoSpeed', value: p.iso }] : []),
+                ...(p.focalLength ? [{ '@type': 'PropertyValue', name: 'focalLength', value: p.focalLength }] : []),
+                ...(p.exposure ? [{ '@type': 'PropertyValue', name: 'exposureTime', value: p.exposure }] : []),
+                ...(p.lens ? [{ '@type': 'PropertyValue', name: 'lens', value: p.lens }] : [])
+            ];
+            return obj;
+        });
+
+        el.textContent = JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'ImageGallery',
+            name: 'Subroto Das Photo Gallery',
+            url: 'https://photos.subromart.com',
+            description: `Photography collection by Subroto Das — ${photos.length} photos`,
+            author: { '@type': 'Person', name: 'Subroto Das', jobTitle: 'Software Engineer', url: 'https://me.subromart.com' },
+            image: imageObjects
+        });
+    }
+
     // Gallery
-    async function loadGallery() { try { photos = (await getData()).photos || []; } catch { photos = []; } applyFilter(); }
+    async function loadGallery() { try { photos = (await getData()).photos || []; } catch { photos = []; } updateSEO(); applyFilter(); }
 
     function getPhotoDate(p) { return new Date(p.dateTaken || p.date); }
 
@@ -235,19 +296,22 @@
 
             items.forEach(photo => {
                 const item = document.createElement('div'); item.className = 'sg-item skel';
+                item.setAttribute('itemscope',''); item.setAttribute('itemtype','https://schema.org/ImageObject');
                 const img = document.createElement('img');
-                img.alt = photo.alt || photo.caption;
+                img.alt = seoAlt(photo);
+                img.setAttribute('itemprop','contentUrl');
                 img.loading = 'lazy';
                 img.onload = () => { item.classList.remove('skel'); img.classList.add('loaded'); item.style.aspectRatio = ''; };
                 img.onerror = () => item.remove();
                 img.src = photo.src;
 
                 const over = document.createElement('div'); over.className = 'sg-over';
-                const cap = document.createElement('div'); cap.className = 'sg-cap'; cap.textContent = photo.caption;
-                const dt = document.createElement('div'); dt.className = 'sg-date';
+                const cap = document.createElement('div'); cap.className = 'sg-cap'; cap.setAttribute('itemprop','name'); cap.textContent = seoTitle(photo);
+                const dt = document.createElement('div'); dt.className = 'sg-date'; dt.setAttribute('itemprop','dateCreated');
                 const photoDate = getPhotoDate(photo);
                 dt.textContent = photoDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-                over.append(cap, dt);
+                const metaDesc = document.createElement('meta'); metaDesc.setAttribute('itemprop','description'); metaDesc.content = seoDesc(photo);
+                over.append(cap, dt, metaDesc);
                 if (photo.cameraModel) { const cm = document.createElement('div'); cm.className = 'sg-cam'; cm.textContent = photo.cameraModel; over.appendChild(cm); }
 
                 item.append(img, over);
