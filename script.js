@@ -22,7 +22,7 @@
     }
 
     // Init
-    window.addEventListener('load', () => { setTimeout(() => $('#preloader').classList.add('hidden'), 1800); lucide.createIcons(); loadGallery(); checkRoute(); });
+    window.addEventListener('load', () => { lucide.createIcons(); loadGallery(); checkRoute(); });
 
     // Hidden route — only accessible via #upload
     function checkRoute() {

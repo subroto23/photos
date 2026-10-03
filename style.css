@@ -28,36 +28,6 @@ html{scroll-behavior:smooth}
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
 a{text-decoration:none;color:inherit}button{border:none;cursor:pointer;font-family:inherit;background:none}img{display:block;max-width:100%}
 
-/* Preloader */
-#preloader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;transition:opacity .8s ease,visibility .8s ease;overflow:hidden}
-#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none}
-#preloader.hidden .pre-logo{transform:scale(1.5);opacity:0}
-#preloader.hidden .pre-brand{transform:translateY(-10px);opacity:0}
-#preloader.hidden .pre-line{transform:scaleX(0)}
-#preloader.hidden .pre-sub{transform:translateY(10px);opacity:0}
-
-/* Camera lens icon */
-.pre-logo{width:56px;height:56px;margin-bottom:20px;position:relative;opacity:0;animation:preLogo .8s .2s var(--ease-out) forwards}
-.pre-logo-ring{width:56px;height:56px;border-radius:50%;border:2px solid var(--gold);position:absolute;inset:0;animation:preRingSpin 3s linear infinite}
-.pre-logo-ring::before{content:'';position:absolute;top:-2px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px rgba(201,162,39,.5)}
-.pre-logo-inner{width:24px;height:24px;border-radius:50%;border:2px solid rgba(201,162,39,.4);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:prePulse 1.5s ease infinite}
-.pre-logo-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(201,162,39,.6)}
-
-@keyframes preRingSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes prePulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.4}50%{transform:translate(-50%,-50%) scale(1.15);opacity:1}}
-@keyframes preLogo{from{opacity:0;transform:scale(.5) rotate(-90deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
-
-.pre-brand{font-family:var(--serif);font-size:1.8rem;color:var(--ink);letter-spacing:.18em;text-transform:uppercase;font-weight:500;opacity:0;animation:preFadeUp .7s .5s var(--ease-out) forwards;transition:all .5s ease}
-.pre-line{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px 0;opacity:0;animation:preLineIn .6s .8s var(--ease-out) forwards;transition:all .5s ease;transform-origin:center}
-.pre-sub{font-family:var(--sans);font-size:.65rem;color:var(--ink3);letter-spacing:.25em;text-transform:uppercase;opacity:0;animation:preFadeUp .7s 1s var(--ease-out) forwards;transition:all .5s ease}
-
-.ld-wrap{display:flex;gap:8px;margin-top:28px;opacity:0;animation:preFadeUp .5s 1.2s var(--ease-out) forwards}
-.ld{width:4px;height:4px;border-radius:50%;background:var(--gold);animation:lp .7s ease infinite alternate}
-.ld:nth-child(2){animation-delay:.14s}.ld:nth-child(3){animation-delay:.28s}.ld:nth-child(4){animation-delay:.42s}
-@keyframes lp{from{opacity:.15;transform:scale(.5)}to{opacity:1;transform:scale(1.6)}}
-@keyframes preFadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-@keyframes preLineIn{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
-
 /* === NAVBAR === */
 #navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 32px;background:rgba(10,8,6,.92);backdrop-filter:blur(40px) saturate(1.4);-webkit-backdrop-filter:blur(40px) saturate(1.4);border-bottom:1px solid var(--border);transition:box-shadow .3s}
 #navbar.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.4)}
