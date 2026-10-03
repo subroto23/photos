@@ -135,7 +135,7 @@ a{text-decoration:none;color:inherit}button{border:none;cursor:pointer;font-fami
 /* Masonry — full photos, NO crop */
 .sg{columns:4;column-gap:10px;padding:10px 32px 32px}
 
-.sg-item{break-inside:avoid;position:relative;overflow:hidden;cursor:pointer;background:var(--bg2);margin-bottom:10px;border-radius:4px;border:1px solid transparent;transition:border-color .5s var(--ease),box-shadow .5s var(--ease);perspective:800px}
+.sg-item{break-inside:avoid;position:relative;overflow:hidden;cursor:pointer;background:var(--bg2);margin-bottom:10px;border-radius:12px;border:1px solid transparent;transition:border-color .5s var(--ease),box-shadow .5s var(--ease);perspective:800px}
 .sg-item:hover{border-color:rgba(201,162,39,.15);box-shadow:0 12px 48px rgba(0,0,0,.35),0 0 24px rgba(201,162,39,.06)}
 
 .sg-item img{width:100%;display:block;opacity:0;transform:scale(1.08);transition:opacity .8s var(--ease-out),transform 10s cubic-bezier(.08,0,.12,1),filter .5s var(--ease);filter:brightness(.86) contrast(1.06) saturate(.92)}
@@ -159,7 +159,7 @@ a{text-decoration:none;color:inherit}button{border:none;cursor:pointer;font-fami
 .sg-over{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;transition:opacity .4s var(--ease)}
 .sg-item:hover .sg-over{opacity:1}
 .sg-over::before{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,8,6,.9) 0%,rgba(10,8,6,.3) 35%,rgba(10,8,6,.05) 55%,transparent 100%)}
-.sg-over::after{content:'';position:absolute;inset:4px;border:1px solid rgba(201,162,39,.1);border-radius:2px;pointer-events:none;transition:border-color .4s,box-shadow .4s}
+.sg-over::after{content:'';position:absolute;inset:4px;border:1px solid rgba(201,162,39,.1);border-radius:8px;pointer-events:none;transition:border-color .4s,box-shadow .4s}
 .sg-item:hover .sg-over::after{border-color:rgba(201,162,39,.3);box-shadow:inset 0 0 30px rgba(201,162,39,.04)}
 .sg-over *{position:relative;z-index:1}
 
@@ -399,7 +399,7 @@ body.authed .lb.open .lb-del{display:flex}
     .date-picker.mobile-open{top:50px;padding:10px 12px}
 
     .sg{columns:2;column-gap:4px;padding:4px 8px 8px}
-    .sg-item{margin-bottom:4px;border-radius:3px}
+    .sg-item{margin-bottom:4px;border-radius:9px}
     .sg-cap{font-size:.82rem;padding:0 10px}
     .sg-date{padding:0 10px;font-size:.55rem}
     .sg-cam{padding:0 10px 10px;font-size:.5rem}
@@ -421,6 +421,6 @@ body.authed .lb.open .lb-del{display:flex}
 /* Tiny phone */
 @media(max-width:360px){
     .sg{columns:1;column-gap:0;padding:0 6px 6px}
-    .sg-item{margin-bottom:6px;border-radius:4px}
+    .sg-item{margin-bottom:6px;border-radius:10px}
     .brand-name{font-size:.95rem}
 }
