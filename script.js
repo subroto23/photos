@@ -597,28 +597,73 @@
         document.querySelectorAll('.sg-item, .tl-label, .gallery-intro, footer').forEach(el => observer.observe(el));
     }
 
-    // Lightbox — two-layer crossfade for smooth, video-like transitions
+    // Lightbox — two-layer crossfade driven by the Web Animations API.
+    // Each slide randomly combines an "enter" style, a Ken-Burns drift and an
+    // easing curve → 800+ smooth variations, any one can appear at any time.
     const lb = $('#lightbox');
     const layers = [$('#lbLayerA'), $('#lbLayerB')];
     let activeLayer = 0;
-    const SS_MOTIONS = ['ss-zin', 'ss-zout', 'ss-pl', 'ss-pr', 'ss-pu', 'ss-pd', 'ss-tilt', 'ss-blur'];
-    let lastMotion = -1;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // How the incoming image enters (start state: offset 0)
+    const ENTERS = [
+        { t: 'scale(1.00)' }, { t: 'scale(1.28)' }, { t: 'scale(0.86)' },
+        { t: 'translateX(8%) scale(1.06)' }, { t: 'translateX(-8%) scale(1.06)' },
+        { t: 'translateY(8%) scale(1.06)' }, { t: 'translateY(-8%) scale(1.06)' },
+        { t: 'translate(7%,7%) scale(1.08)' }, { t: 'translate(-7%,-7%) scale(1.08)' },
+        { t: 'translate(7%,-7%) scale(1.08)' }, { t: 'translate(-7%,7%) scale(1.08)' },
+        { t: 'scale(1.1) rotate(3deg)' }, { t: 'scale(1.1) rotate(-3deg)' },
+        { t: 'scale(1.12)', f: 'blur(20px)' }, { t: 'scale(0.95)', f: 'blur(14px)' },
+        { t: 'scale(1.08)', f: 'blur(10px) brightness(1.5)' }, { t: 'scale(1.1)', f: 'brightness(0.3)' },
+        { t: 'perspective(1200px) rotateY(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateY(-16deg) scale(1.06)' },
+        { t: 'perspective(1200px) rotateX(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateX(-16deg) scale(1.06)' },
+    ];
+    // Continuous Ken-Burns drift (start → end over the whole slide)
+    const MOTIONS = [
+        { s: 'scale(1.06)', e: 'scale(1.17)' }, { s: 'scale(1.17)', e: 'scale(1.06)' },
+        { s: 'scale(1.12) translateX(3%)', e: 'scale(1.15) translateX(-3%)' },
+        { s: 'scale(1.12) translateX(-3%)', e: 'scale(1.15) translateX(3%)' },
+        { s: 'scale(1.12) translateY(3%)', e: 'scale(1.15) translateY(-3%)' },
+        { s: 'scale(1.12) translateY(-3%)', e: 'scale(1.15) translateY(3%)' },
+        { s: 'scale(1.1) translate(3%,2%)', e: 'scale(1.17) translate(-3%,-2%)' },
+        { s: 'scale(1.1) translate(-3%,-2%)', e: 'scale(1.17) translate(3%,2%)' },
+        { s: 'scale(1.1) translate(3%,-2%)', e: 'scale(1.17) translate(-3%,2%)' },
+        { s: 'scale(1.1) translate(-3%,2%)', e: 'scale(1.17) translate(3%,-2%)' },
+        { s: 'scale(1.08) rotate(-1deg)', e: 'scale(1.16) rotate(1deg)' },
+        { s: 'scale(1.08) rotate(1deg)', e: 'scale(1.16) rotate(-1deg)' },
+        { s: 'scale(1.05)', e: 'scale(1.22)' }, { s: 'scale(1.2)', e: 'scale(1.05)' },
+    ];
+    const EASES = ['linear', 'ease-in-out', 'cubic-bezier(.33,0,.2,1)', 'cubic-bezier(.4,0,.2,1)', 'cubic-bezier(.45,.05,.55,.95)'];
+    const rnd = n => Math.floor(Math.random() * n);
 
     function showImage(p) {
-        const onEl = layers[activeLayer];
-        const offEl = layers[activeLayer ^ 1];
-        offEl.onload = () => offEl.classList.add('on');
-        offEl.className = 'lb-layer';
-        offEl.src = p.src; offEl.alt = p.alt || p.caption;
-        void offEl.offsetWidth;
-        if (isPlaying()) {
-            let m; do { m = Math.floor(Math.random() * SS_MOTIONS.length); } while (SS_MOTIONS.length > 1 && m === lastMotion);
-            lastMotion = m;
-            offEl.classList.add(SS_MOTIONS[m]);
-        }
-        // if already cached, onload may not fire — show next frame
-        requestAnimationFrame(() => { if (offEl.complete) offEl.classList.add('on'); });
-        onEl.classList.remove('on');
+        const outEl = layers[activeLayer];
+        const inEl = layers[activeLayer ^ 1];
+        inEl.src = p.src; inEl.alt = p.alt || p.caption;
+
+        const run = () => {
+            layers.forEach(el => el.getAnimations().forEach(a => a.cancel()));
+            const slideshow = isPlaying();
+            const dur = slideshow ? SLIDE_MS : 650;
+
+            if (reduceMotion || !slideshow) {
+                inEl.animate([{ opacity: 0, transform: 'scale(1.02)' }, { opacity: 1, transform: 'scale(1)' }],
+                    { duration: reduceMotion ? 300 : dur, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'both' });
+            } else {
+                const en = ENTERS[rnd(ENTERS.length)], mo = MOTIONS[rnd(MOTIONS.length)], ez = EASES[rnd(EASES.length)];
+                inEl.animate([
+                    { opacity: 0, transform: en.t, filter: en.f || 'blur(0px)', offset: 0, easing: 'cubic-bezier(.22,.61,.36,1)' },
+                    { opacity: 1, transform: mo.s, filter: 'blur(0px) brightness(1)', offset: 0.16, easing: ez },
+                    { opacity: 1, transform: mo.e, filter: 'blur(0px) brightness(1)', offset: 1 },
+                ], { duration: dur, fill: 'both' });
+            }
+            // crossfade the previous image out
+            if (outEl.src) outEl.animate([{ opacity: 1 }, { opacity: 0 }],
+                { duration: Math.min(1100, dur), easing: 'ease', fill: 'forwards' });
+        };
+
+        if (inEl.complete && inEl.naturalWidth) run();
+        else { inEl.onload = run; inEl.onerror = run; }
         activeLayer ^= 1;
     }
 

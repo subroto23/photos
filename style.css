@@ -264,29 +264,9 @@ body.authed .lb.open .lb-del{display:flex}
 .lb-arr:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)}.lb-arr i{width:20px;height:20px}
 .lb-l{left:16px}.lb-r{right:16px}
 .lb-main{max-width:90vw;max-height:90vh;text-align:center}
-/* Two-layer crossfade stage */
+/* Two-layer stage — all motion driven by the Web Animations API (script.js) */
 .lb-stage{position:relative;width:90vw;height:76vh;overflow:hidden}
-.lb-layer{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1s ease;will-change:opacity,transform}
-.lb-layer.on{opacity:1}
-/* Manual view: gentle fade already from opacity transition */
-
-/* === Slideshow varied cinematic motions (applied to the active layer) === */
-.lb.slideshow .lb-layer.on.ss-zin{animation:ssZin var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-zout{animation:ssZout var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-pl{animation:ssPL var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-pr{animation:ssPR var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-pu{animation:ssPU var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-pd{animation:ssPD var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-tilt{animation:ssTilt var(--slide-dur,6s) ease-out both}
-.lb.slideshow .lb-layer.on.ss-blur{animation:ssBlur var(--slide-dur,6s) ease-out both}
-@keyframes ssZin{from{transform:scale(1.02)}to{transform:scale(1.16)}}
-@keyframes ssZout{from{transform:scale(1.18)}to{transform:scale(1.02)}}
-@keyframes ssPL{from{transform:scale(1.14) translateX(3%)}to{transform:scale(1.14) translateX(-3%)}}
-@keyframes ssPR{from{transform:scale(1.14) translateX(-3%)}to{transform:scale(1.14) translateX(3%)}}
-@keyframes ssPU{from{transform:scale(1.14) translateY(3%)}to{transform:scale(1.14) translateY(-3%)}}
-@keyframes ssPD{from{transform:scale(1.14) translateY(-3%)}to{transform:scale(1.14) translateY(3%)}}
-@keyframes ssTilt{from{transform:scale(1.04) rotate(-1.2deg)}to{transform:scale(1.15) rotate(1.2deg)}}
-@keyframes ssBlur{0%{transform:scale(1.1);filter:blur(14px)}22%{filter:blur(0)}100%{transform:scale(1.16);filter:blur(0)}}
+.lb-layer{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain;opacity:0;will-change:opacity,transform,filter;backface-visibility:hidden}
 
 /* === Lightbox controls (slideshow + sound) === */
 .lb-controls{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:10px}
