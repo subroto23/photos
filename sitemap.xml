@@ -7,9 +7,49 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://me.subromart.com/assets/images/about.png</image:loc>
-      <image:title>Subroto Das Photo Gallery</image:title>
-      <image:caption>Official photo gallery of Subroto Das, Software Engineer at Apar's Classroom</image:caption>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/professional/1790966912170-ChatGPT_Image_Sep_30__2026__04_48_33_PM.png</image:loc>
+      <image:title>Subroto Das</image:title>
+      <image:caption>Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/professional/1790967941120-image.jpg</image:loc>
+      <image:title>Subroto Das Ghibli</image:title>
+      <image:caption>Subroto Das Ghibli</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/professional/1790970201779-subroto_signature_Small.jpg</image:loc>
+      <image:title>Subroto Das</image:title>
+      <image:caption>Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/professional/1790970326388-IMG-20240911-WA0000.jpg</image:loc>
+      <image:title>Subroto Das</image:title>
+      <image:caption>Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/travels/1790971128878-1000045902.jpg</image:loc>
+      <image:title>Malysia Subroto Das</image:title>
+      <image:caption>Malysia Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/travels/1790971791989-1000042797.jpg</image:loc>
+      <image:title>Subroto Das</image:title>
+      <image:caption>Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/general/1791002937517-team-404.jpg</image:loc>
+      <image:title>404</image:title>
+      <image:caption>404</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/professional/1791009335155-1000001669.jpg</image:loc>
+      <image:title>Subroto Das</image:title>
+      <image:caption>Subroto Das</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://raw.githubusercontent.com/subroto23/photos/main/photos/travel/subroto-das-travel-dsc00824-1791055610638.jpg</image:loc>
+      <image:title>ভ্রমণই জীবন</image:title>
+      <image:caption>ভ্রমণই জীবন</image:caption>
     </image:image>
   </url>
 </urlset>
