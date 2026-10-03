@@ -696,7 +696,7 @@
         setSoundBtn();
         startMusic();
     }
-    function stopSlideshow() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } lb.classList.remove('slideshow'); if (document.getElementById('lightboxPlay')) setPlayBtn(false); stopMusic(); }
+    function stopSlideshow() { if (slideTimer) { clearInterval(slideTimer); slideTimer = null; } lb.classList.remove('slideshow'); if (document.getElementById('lightboxPlay')) setPlayBtn(false); stopMusic(); closeMusicPanel(); }
     function toggleSlideshow() { isPlaying() ? stopSlideshow() : startSlideshow(); }
     $('#lightboxPlay').addEventListener('click', e => { e.stopPropagation(); toggleSlideshow(); });
 
@@ -720,20 +720,37 @@
 
     const audio = $('#ssAudio');
     let soundMuted = false;
+    let manualTrack = null; // {url, name} chosen by the user via search
     function pickTrack() {
         if (!musicTracks.length) return null;
         return musicTracks[Math.floor(Math.random() * musicTracks.length)];
     }
+    function setNowPlaying(txt) { const el = $('#mpNow'); if (el) el.textContent = txt; }
     function startMusic() {
+        if (manualTrack) { playChosen(manualTrack); return; }
         const t = pickTrack();
         if (!t) return;
         if (!audio.src || audio.ended || audio.paused) { audio.src = t; }
-        audio.volume = 0.55;
-        audio.muted = soundMuted;
+        audio.loop = false; audio.volume = 0.55; audio.muted = soundMuted;
         audio.play().catch(() => {});
+        setNowPlaying('Auto · random music');
+    }
+    function playChosen(track) {
+        manualTrack = track;
+        audio.src = track.url; audio.loop = true; audio.volume = 0.6; audio.muted = soundMuted;
+        audio.play().catch(() => {});
+        setNowPlaying('♪ ' + track.name);
+    }
+    function nextRandom() {
+        manualTrack = null;
+        const t = pickTrack(); if (!t) return;
+        audio.src = t; audio.loop = false; audio.muted = soundMuted;
+        audio.play().catch(() => {});
+        setNowPlaying('Auto · random music');
+        document.querySelectorAll('.mp-item.playing').forEach(el => el.classList.remove('playing'));
     }
     function stopMusic() { try { audio.pause(); } catch {} }
-    audio.addEventListener('ended', () => { const t = pickTrack(); if (t) { audio.src = t; audio.play().catch(() => {}); } });
+    audio.addEventListener('ended', () => { if (manualTrack) return; const t = pickTrack(); if (t) { audio.src = t; audio.play().catch(() => {}); } });
     function setSoundBtn() {
         const b = $('#lightboxSound');
         b.classList.toggle('muted', soundMuted);
@@ -747,6 +764,54 @@
         if (!soundMuted && audio.src && audio.paused && isPlaying()) audio.play().catch(() => {});
         setSoundBtn();
     });
+
+    // === Music search panel (iTunes Search API — free, keyless, legal previews) ===
+    const musicPanel = $('#musicPanel');
+    $('#lightboxMusicBtn').addEventListener('click', e => {
+        e.stopPropagation();
+        const open = musicPanel.classList.toggle('open');
+        $('#lightboxMusicBtn').classList.toggle('active', open);
+        if (open) setTimeout(() => $('#mpSearch').focus(), 50);
+    });
+    $('#mpSkip').addEventListener('click', e => { e.stopPropagation(); nextRandom(); toast('Next track', 'info'); });
+    musicPanel.addEventListener('click', e => e.stopPropagation());
+
+    let searchTimer = null;
+    $('#mpSearch').addEventListener('input', e => {
+        clearTimeout(searchTimer);
+        const q = e.target.value.trim();
+        if (!q) { $('#mpResults').innerHTML = ''; return; }
+        searchTimer = setTimeout(() => searchMusic(q), 400);
+    });
+    async function searchMusic(q) {
+        const box = $('#mpResults');
+        box.innerHTML = '<div class="mp-empty">Searching…</div>';
+        try {
+            const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25`);
+            const j = await r.json();
+            const list = (j.results || []).filter(t => t.previewUrl);
+            if (!list.length) { box.innerHTML = '<div class="mp-empty">No results</div>'; return; }
+            box.innerHTML = '';
+            list.forEach(t => {
+                const it = document.createElement('div');
+                it.className = 'mp-item';
+                const art = (t.artworkUrl60 || t.artworkUrl100 || '').replace('60x60', '80x80');
+                it.innerHTML = `<img src="${art}" alt=""><div class="mp-item-txt"><div class="mp-item-title"></div><div class="mp-item-artist"></div></div>`;
+                it.querySelector('.mp-item-title').textContent = t.trackName;
+                it.querySelector('.mp-item-artist').textContent = t.artistName;
+                it.addEventListener('click', () => {
+                    document.querySelectorAll('.mp-item.playing').forEach(el => el.classList.remove('playing'));
+                    it.classList.add('playing');
+                    playChosen({ url: t.previewUrl, name: `${t.trackName} — ${t.artistName}` });
+                    if (soundMuted) { soundMuted = false; audio.muted = false; setSoundBtn(); }
+                    toast('Playing: ' + t.trackName, 'success');
+                });
+                box.appendChild(it);
+            });
+        } catch (err) { box.innerHTML = '<div class="mp-empty">Search failed</div>'; }
+    }
+    // Close panel when slideshow stops
+    function closeMusicPanel() { musicPanel.classList.remove('open'); $('#lightboxMusicBtn').classList.remove('active'); }
 
     // Delete (only works with a valid PIN — Worker verifies server-side)
     async function deletePhoto(photo) {

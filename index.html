@@ -157,7 +157,19 @@
         <button class="lb-arr lb-r" id="lightboxNext"><i data-lucide="chevron-right"></i></button>
         <div class="lb-controls">
             <button class="lb-ctrl lb-play" id="lightboxPlay" title="Play slideshow" aria-label="Play slideshow"><i data-lucide="play"></i><span>Slideshow</span></button>
+            <button class="lb-ctrl lb-music" id="lightboxMusicBtn" title="Change / search music" aria-label="Music"><i data-lucide="music"></i></button>
             <button class="lb-ctrl lb-sound" id="lightboxSound" title="Toggle sound" aria-label="Toggle sound"><i data-lucide="volume-2"></i></button>
+        </div>
+        <div class="lb-music-panel" id="musicPanel">
+            <div class="mp-head">
+                <span class="mp-now" id="mpNow">Auto · random music</span>
+                <button class="mp-skip" id="mpSkip" title="Next random track" aria-label="Next track"><i data-lucide="skip-forward"></i></button>
+            </div>
+            <div class="mp-search">
+                <i data-lucide="search"></i>
+                <input type="text" id="mpSearch" placeholder="Search a song or artist (e.g. Arijit Singh)..." autocomplete="off">
+            </div>
+            <div class="mp-results" id="mpResults"></div>
         </div>
         <audio id="ssAudio" preload="none"></audio>
         <div class="lb-main">
