@@ -836,6 +836,12 @@
     $('#lightboxNext').addEventListener('click', e => { e.stopPropagation(); navLB(1); });
     document.addEventListener('keydown', e => {
         if (!lb.classList.contains('open')) return;
+        // Don't hijack keys while the user is typing (e.g. music search box)
+        const el = e.target;
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+            if (e.key === 'Escape') el.blur();
+            return;
+        }
         if (e.key === 'Escape') closeLB();
         else if (e.key === 'ArrowLeft') navLB(-1);
         else if (e.key === 'ArrowRight') navLB(1);
