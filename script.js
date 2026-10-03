@@ -812,6 +812,13 @@
     }
     // Close panel when slideshow stops
     function closeMusicPanel() { musicPanel.classList.remove('open'); $('#lightboxMusicBtn').classList.remove('active'); }
+    // Close the search panel when clicking anywhere outside it (capture phase
+    // so it fires even for handlers that stop propagation)
+    document.addEventListener('click', e => {
+        if (!musicPanel.classList.contains('open')) return;
+        if (e.target.closest('#musicPanel') || e.target.closest('#lightboxMusicBtn')) return;
+        closeMusicPanel();
+    }, true);
 
     // Delete (only works with a valid PIN — Worker verifies server-side)
     async function deletePhoto(photo) {
