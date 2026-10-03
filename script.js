@@ -736,34 +736,61 @@
     const audio = $('#ssAudio');
     let soundMuted = false;
     let manualTrack = null; // {url, name} chosen by the user via search
+    let musicEnabled = true, musicVolume = 0.55;
+    try {
+        const on = localStorage.getItem('ss-music-on'); if (on !== null) musicEnabled = on === '1';
+        const vol = parseFloat(localStorage.getItem('ss-music-vol')); if (!isNaN(vol)) musicVolume = Math.min(1, Math.max(0, vol));
+    } catch {}
     function pickTrack() {
         if (!musicTracks.length) return null;
         return musicTracks[Math.floor(Math.random() * musicTracks.length)];
     }
-    function setNowPlaying(txt) { const el = $('#mpNow'); if (el) el.textContent = txt; }
+    function setNowPlaying(txt) { const el = $('#mpNow'); if (el) el.textContent = musicEnabled ? txt : 'Music off'; }
     function startMusic() {
+        if (!musicEnabled) { stopMusic(); setNowPlaying(''); return; }
         if (manualTrack) { playChosen(manualTrack); return; }
         const t = pickTrack();
         if (!t) return;
         if (!audio.src || audio.ended || audio.paused) { audio.src = t; }
-        audio.loop = false; audio.volume = 0.55; audio.muted = soundMuted;
+        audio.loop = false; audio.volume = musicVolume; audio.muted = soundMuted;
         audio.play().catch(() => {});
         setNowPlaying('Auto · random music');
     }
     function playChosen(track) {
+        if (!musicEnabled) { musicEnabled = true; try { localStorage.setItem('ss-music-on', '1'); } catch {} applyMusicUI(); }
         manualTrack = track;
-        audio.src = track.url; audio.loop = true; audio.volume = 0.6; audio.muted = soundMuted;
+        audio.src = track.url; audio.loop = true; audio.volume = musicVolume; audio.muted = soundMuted;
         audio.play().catch(() => {});
         setNowPlaying('♪ ' + track.name);
     }
     function nextRandom() {
+        if (!musicEnabled) { musicEnabled = true; try { localStorage.setItem('ss-music-on', '1'); } catch {} applyMusicUI(); }
         manualTrack = null;
         const t = pickTrack(); if (!t) return;
-        audio.src = t; audio.loop = false; audio.muted = soundMuted;
+        audio.src = t; audio.loop = false; audio.volume = musicVolume; audio.muted = soundMuted;
         audio.play().catch(() => {});
         setNowPlaying('Auto · random music');
         document.querySelectorAll('.mp-item.playing').forEach(el => el.classList.remove('playing'));
     }
+    function applyMusicUI() {
+        const en = $('#mpEnabled'), vol = $('#mpVolume'), row = document.querySelector('.mp-row');
+        if (en) en.checked = musicEnabled;
+        if (vol) vol.value = Math.round(musicVolume * 100);
+        if (row) row.classList.toggle('off', !musicEnabled);
+    }
+    $('#mpEnabled').addEventListener('change', e => {
+        musicEnabled = e.target.checked;
+        try { localStorage.setItem('ss-music-on', musicEnabled ? '1' : '0'); } catch {}
+        applyMusicUI();
+        if (!musicEnabled) { stopMusic(); setNowPlaying(''); }
+        else if (isPlaying()) startMusic();
+    });
+    $('#mpVolume').addEventListener('input', e => {
+        musicVolume = (+e.target.value) / 100;
+        audio.volume = musicVolume;
+        try { localStorage.setItem('ss-music-vol', String(musicVolume)); } catch {}
+    });
+    applyMusicUI();
     function stopMusic() { try { audio.pause(); } catch {} }
     audio.addEventListener('ended', () => { if (manualTrack) return; const t = pickTrack(); if (t) { audio.src = t; audio.play().catch(() => {}); } });
     function setSoundBtn() {

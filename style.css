@@ -302,6 +302,22 @@ body.authed .lb.open .lb-del{display:flex}
 .mp-skip{width:30px;height:30px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--ink2);border:1px solid var(--border);transition:all .2s}
 .mp-skip:hover{color:var(--gold);border-color:var(--border-gold);background:var(--gold-soft)}
 .mp-skip i{width:14px;height:14px}
+/* Music controls row: on/off toggle + volume */
+.mp-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px;padding:2px 2px}
+.mp-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.mp-toggle input{display:none}
+.mp-switch{width:34px;height:18px;border-radius:100px;background:var(--bg3);border:1px solid var(--border2);position:relative;transition:background .2s,border-color .2s;flex-shrink:0}
+.mp-switch::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--ink3);transition:transform .2s,background .2s}
+.mp-toggle input:checked+.mp-switch{background:var(--gold-soft);border-color:var(--border-gold)}
+.mp-toggle input:checked+.mp-switch::after{transform:translateX(16px);background:var(--gold)}
+.mp-toggle-lbl{font-size:.72rem;color:var(--ink2);letter-spacing:.04em}
+.mp-vol{display:flex;align-items:center;gap:8px;flex:1;max-width:190px}
+.mp-vol i{width:15px;height:15px;color:var(--ink3);flex-shrink:0}
+.mp-vol input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:100px;background:var(--bg3);outline:none;cursor:pointer}
+.mp-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 6px rgba(201,162,39,.4)}
+.mp-vol input[type=range]::-moz-range-thumb{width:14px;height:14px;border:none;border-radius:50%;background:var(--gold);cursor:pointer}
+.mp-row.off .mp-vol{opacity:.4;pointer-events:none}
+
 .mp-search{position:relative;display:flex;align-items:center}
 .mp-search i{position:absolute;left:11px;width:14px;height:14px;color:var(--ink3);pointer-events:none}
 .mp-search input{width:100%;padding:9px 12px 9px 34px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--sans);font-size:.78rem;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}

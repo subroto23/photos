@@ -170,6 +170,13 @@
                 <span class="mp-now" id="mpNow">Auto · random music</span>
                 <button class="mp-skip" id="mpSkip" title="Next random track" aria-label="Next track"><i data-lucide="skip-forward"></i></button>
             </div>
+            <div class="mp-row">
+                <label class="mp-toggle"><input type="checkbox" id="mpEnabled" checked><span class="mp-switch"></span><span class="mp-toggle-lbl">Music</span></label>
+                <div class="mp-vol">
+                    <i data-lucide="volume-1"></i>
+                    <input type="range" id="mpVolume" min="0" max="100" value="55" aria-label="Volume">
+                </div>
+            </div>
             <div class="mp-search">
                 <i data-lucide="search"></i>
                 <input type="text" id="mpSearch" placeholder="Search a song or artist (e.g. Arijit Singh)..." autocomplete="off">
