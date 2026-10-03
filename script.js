@@ -7,6 +7,8 @@
     const WORKER = 'https://subro-gallery-upload.subrotodas1714037.workers.dev';
 
     let userPin = null, photos = [], filtered = [], allPhotos = [], lbi = -1, picks = [];
+    const PER_PAGE = 60;
+    let currentPage = 1, currentCat = '__all';
     const $ = s => document.querySelector(s);
 
     // Call the Worker (the browser never sees the GitHub token)
@@ -338,7 +340,7 @@
             pt.textContent = 'Done!'; toast(`${total} photo(s) uploaded!`, 'success');
             picks = []; $('#previewGrid').innerHTML = ''; capInput.value = ''; catInput.value = ''; selectedCat = ''; fi.value = '';
             setTimeout(() => { pp.style.display = 'none'; pf.style.width = '0%'; }, 800);
-            photos = [...photos, ...entries]; updateSEO(); applyFilter();
+            photos = [...photos, ...entries]; updateSEO(); buildCatFilter(); applyFilter();
         } catch (e) { toast(`Failed: ${e.message}`, 'error'); pt.textContent = 'Failed'; }
         $('#uploadBtn').disabled = false;
     });
@@ -405,26 +407,71 @@
     }
 
     // Gallery
-    async function loadGallery() { try { photos = (await getData()).photos || []; } catch { photos = []; } updateSEO(); applyFilter(); }
+    async function loadGallery() { try { photos = (await getData()).photos || []; } catch { photos = []; } updateSEO(); buildCatFilter(); applyFilter(); }
 
     function getPhotoDate(p) { return new Date(p.dateTaken || p.date); }
+
+    // Category filter chips (derived from actual photos)
+    function buildCatFilter() {
+        const bar = $('#catFilter'); if (!bar) return;
+        const counts = {};
+        photos.forEach(p => { const c = (p.category || 'General').trim() || 'General'; counts[c] = (counts[c] || 0) + 1; });
+        const cats = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+        bar.innerHTML = '';
+        const mk = (key, label, count) => {
+            const b = document.createElement('button');
+            b.className = 'cat-chip' + (currentCat === key ? ' active' : '');
+            b.innerHTML = `${label} <span>${count}</span>`;
+            b.addEventListener('click', () => { currentCat = key; currentPage = 1; buildCatFilter(); applyFilter(); scrollGalleryTop(); });
+            bar.appendChild(b);
+        };
+        mk('__all', 'All', photos.length);
+        cats.forEach(c => mk(c, (CAP_DATA[c] && CAP_DATA[c].icon ? CAP_DATA[c].icon + ' ' : '') + c, counts[c]));
+    }
+
+    function scrollGalleryTop() {
+        const el = document.querySelector('.gallery-toolbar') || $('#gallery');
+        if (el) window.scrollTo({ top: Math.max(0, el.offsetTop - 70), behavior: 'smooth' });
+    }
 
     function applyFilter() {
         const from = $('#dateFrom').value ? new Date($('#dateFrom').value + 'T00:00:00') : null;
         const to = $('#dateTo').value ? new Date($('#dateTo').value + 'T23:59:59') : null;
-        filtered = photos.filter(p => { const d = getPhotoDate(p); if (from && d < from) return false; if (to && d > to) return false; return true; });
+        filtered = photos.filter(p => {
+            const d = getPhotoDate(p);
+            if (from && d < from) return false;
+            if (to && d > to) return false;
+            if (currentCat !== '__all' && (p.category || 'General') !== currentCat) return false;
+            return true;
+        });
         filtered.sort((a, b) => getPhotoDate(b) - getPhotoDate(a));
+        currentPage = 1;
         renderTimeline();
+    }
+
+    function updateResultCount() {
+        const el = $('#resultCount'); if (!el) return;
+        const n = filtered.length;
+        if (!n) { el.textContent = ''; return; }
+        const totalPages = Math.ceil(n / PER_PAGE);
+        const start = (currentPage - 1) * PER_PAGE + 1;
+        const end = Math.min(currentPage * PER_PAGE, n);
+        el.textContent = totalPages > 1 ? `${start}–${end} of ${n} photos` : `${n} photo${n > 1 ? 's' : ''}`;
     }
 
     function renderTimeline() {
         const tl = $('#timeline'); tl.innerHTML = '';
         const empty = $('#emptyState');
-        if (!filtered.length) { empty.classList.add('show'); lucide.createIcons(); return; }
+        updateResultCount();
+        if (!filtered.length) { empty.classList.add('show'); renderPagination(1); lucide.createIcons(); return; }
         empty.classList.remove('show');
 
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const pageItems = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
         const groups = {};
-        filtered.forEach(p => {
+        pageItems.forEach(p => {
             const d = getPhotoDate(p);
             const key = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
             if (!groups[key]) groups[key] = [];
@@ -468,7 +515,46 @@
             tl.appendChild(grp);
         });
 
+        renderPagination(totalPages);
         initScrollReveal();
+    }
+
+    function goToPage(n) {
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+        currentPage = Math.min(Math.max(1, n), totalPages);
+        renderTimeline();
+        scrollGalleryTop();
+    }
+
+    // Pagination controls with ellipsis windowing
+    function renderPagination(totalPages) {
+        const el = $('#pagination'); if (!el) return;
+        el.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const btn = (label, page, { active = false, disabled = false, icon = false } = {}) => {
+            const b = document.createElement('button');
+            b.className = 'pg-btn' + (active ? ' active' : '');
+            if (icon) b.innerHTML = `<i data-lucide="${label}"></i>`; else b.textContent = label;
+            b.disabled = disabled;
+            if (!disabled && !active) b.addEventListener('click', () => goToPage(page));
+            el.appendChild(b);
+        };
+        const ellipsis = () => { const s = document.createElement('span'); s.className = 'pg-ellipsis'; s.textContent = '…'; el.appendChild(s); };
+
+        btn('chevron-left', currentPage - 1, { disabled: currentPage === 1, icon: true });
+
+        const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+        const list = [...pages].filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+        let prev = 0;
+        list.forEach(p => {
+            if (p - prev > 1) ellipsis();
+            btn(String(p), p, { active: p === currentPage });
+            prev = p;
+        });
+
+        btn('chevron-right', currentPage + 1, { disabled: currentPage === totalPages, icon: true });
+        lucide.createIcons();
     }
 
     // 3D tilt on hover
