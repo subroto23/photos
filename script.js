@@ -605,23 +605,55 @@
     let activeLayer = 0;
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Named transition presets (PowerPoint-style). User picks which ones are
-    // in the random pool; "enters" = possible start states for that style.
+    // Named transition presets (PowerPoint-style). User picks which ones are in
+    // the random pool; default = all → fully random. Each has a start state (t)
+    // and an optional start filter (f, full blur+brightness+saturate for smooth lerp).
+    const FBASE = 'blur(0px) brightness(1) saturate(1)';
     const TRANSITIONS = [
-        { id: 'fade', name: 'Fade', enters: [{ t: 'scale(1.0)' }] },
-        { id: 'zoomin', name: 'Zoom In', enters: [{ t: 'scale(0.86)' }] },
-        { id: 'zoomout', name: 'Zoom Out', enters: [{ t: 'scale(1.28)' }] },
-        { id: 'slideL', name: 'Slide Left', enters: [{ t: 'translateX(8%) scale(1.06)' }] },
-        { id: 'slideR', name: 'Slide Right', enters: [{ t: 'translateX(-8%) scale(1.06)' }] },
-        { id: 'slideU', name: 'Slide Up', enters: [{ t: 'translateY(8%) scale(1.06)' }] },
-        { id: 'slideD', name: 'Slide Down', enters: [{ t: 'translateY(-8%) scale(1.06)' }] },
-        { id: 'diag', name: 'Diagonal', enters: [{ t: 'translate(7%,7%) scale(1.08)' }, { t: 'translate(-7%,-7%) scale(1.08)' }, { t: 'translate(7%,-7%) scale(1.08)' }, { t: 'translate(-7%,7%) scale(1.08)' }] },
-        { id: 'rotate', name: 'Rotate', enters: [{ t: 'scale(1.1) rotate(3deg)' }, { t: 'scale(1.1) rotate(-3deg)' }] },
-        { id: 'blur', name: 'Blur', enters: [{ t: 'scale(1.12)', f: 'blur(20px)' }, { t: 'scale(0.95)', f: 'blur(14px)' }] },
-        { id: 'glow', name: 'Glow', enters: [{ t: 'scale(1.08)', f: 'blur(10px) brightness(1.5)' }] },
-        { id: 'darkfade', name: 'Dark Fade', enters: [{ t: 'scale(1.1)', f: 'brightness(0.3)' }] },
-        { id: 'flipH', name: 'Flip Horizontal', enters: [{ t: 'perspective(1200px) rotateY(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateY(-16deg) scale(1.06)' }] },
-        { id: 'flipV', name: 'Flip Vertical', enters: [{ t: 'perspective(1200px) rotateX(16deg) scale(1.06)' }, { t: 'perspective(1200px) rotateX(-16deg) scale(1.06)' }] },
+        { id: 'fade', name: 'Fade', t: 'scale(1.0)' },
+        { id: 'zin', name: 'Zoom In', t: 'scale(0.86)' },
+        { id: 'zinS', name: 'Zoom In Soft', t: 'scale(0.94)' },
+        { id: 'zinX', name: 'Zoom In Strong', t: 'scale(0.68)' },
+        { id: 'zout', name: 'Zoom Out', t: 'scale(1.28)' },
+        { id: 'zoutS', name: 'Zoom Out Soft', t: 'scale(1.12)' },
+        { id: 'zoutX', name: 'Zoom Out Strong', t: 'scale(1.55)' },
+        { id: 'slL', name: 'Slide Left', t: 'translateX(9%) scale(1.06)' },
+        { id: 'slR', name: 'Slide Right', t: 'translateX(-9%) scale(1.06)' },
+        { id: 'slU', name: 'Slide Up', t: 'translateY(9%) scale(1.06)' },
+        { id: 'slD', name: 'Slide Down', t: 'translateY(-9%) scale(1.06)' },
+        { id: 'slLF', name: 'Slide Left Far', t: 'translateX(20%) scale(1.12)' },
+        { id: 'slRF', name: 'Slide Right Far', t: 'translateX(-20%) scale(1.12)' },
+        { id: 'slUF', name: 'Slide Up Far', t: 'translateY(20%) scale(1.12)' },
+        { id: 'slDF', name: 'Slide Down Far', t: 'translateY(-20%) scale(1.12)' },
+        { id: 'diaTL', name: 'Diagonal ↘', t: 'translate(-8%,-8%) scale(1.1)' },
+        { id: 'diaTR', name: 'Diagonal ↙', t: 'translate(8%,-8%) scale(1.1)' },
+        { id: 'diaBL', name: 'Diagonal ↗', t: 'translate(-8%,8%) scale(1.1)' },
+        { id: 'diaBR', name: 'Diagonal ↖', t: 'translate(8%,8%) scale(1.1)' },
+        { id: 'rotCW', name: 'Rotate CW', t: 'scale(1.1) rotate(5deg)' },
+        { id: 'rotCCW', name: 'Rotate CCW', t: 'scale(1.1) rotate(-5deg)' },
+        { id: 'spinIn', name: 'Spin In', t: 'scale(0.8) rotate(-12deg)' },
+        { id: 'spinOut', name: 'Spin Out', t: 'scale(1.28) rotate(10deg)' },
+        { id: 'tiltL', name: 'Tilt Left', t: 'scale(1.08) rotate(-3deg) translateX(5%)' },
+        { id: 'tiltR', name: 'Tilt Right', t: 'scale(1.08) rotate(3deg) translateX(-5%)' },
+        { id: 'flipH', name: 'Flip Horizontal', t: 'perspective(1200px) rotateY(20deg) scale(1.06)' },
+        { id: 'flipHr', name: 'Flip Horizontal ↺', t: 'perspective(1200px) rotateY(-20deg) scale(1.06)' },
+        { id: 'flipV', name: 'Flip Vertical', t: 'perspective(1200px) rotateX(20deg) scale(1.06)' },
+        { id: 'flipVr', name: 'Flip Vertical ↺', t: 'perspective(1200px) rotateX(-20deg) scale(1.06)' },
+        { id: 'swing', name: 'Swing', t: 'perspective(1200px) rotateY(14deg) rotate(3deg) scale(1.06)' },
+        { id: 'door', name: 'Door', t: 'perspective(1400px) rotateY(32deg) scale(1.04)' },
+        { id: 'driftUp', name: 'Drift Up', t: 'translateY(5%) scale(1.14)' },
+        { id: 'driftDn', name: 'Drift Down', t: 'translateY(-5%) scale(1.14)' },
+        { id: 'pop', name: 'Pop', t: 'scale(0.5)', f: 'blur(4px) brightness(1) saturate(1)' },
+        { id: 'blur', name: 'Blur', t: 'scale(1.12)', f: 'blur(22px) brightness(1) saturate(1)' },
+        { id: 'blurZ', name: 'Blur Zoom', t: 'scale(0.9)', f: 'blur(18px) brightness(1) saturate(1)' },
+        { id: 'softBlur', name: 'Soft Blur', t: 'scale(1.05)', f: 'blur(10px) brightness(1) saturate(1)' },
+        { id: 'glow', name: 'Glow', t: 'scale(1.08)', f: 'blur(10px) brightness(1.6) saturate(1)' },
+        { id: 'glowZ', name: 'Glow Zoom', t: 'scale(0.9)', f: 'blur(8px) brightness(1.5) saturate(1.2)' },
+        { id: 'flash', name: 'Flash', t: 'scale(1.03)', f: 'blur(0px) brightness(2.4) saturate(1)' },
+        { id: 'darkfade', name: 'Dark Fade', t: 'scale(1.1)', f: 'blur(0px) brightness(0.2) saturate(1)' },
+        { id: 'dim', name: 'Dim', t: 'scale(1.05)', f: 'blur(0px) brightness(0.5) saturate(1)' },
+        { id: 'bw', name: 'Color Reveal', t: 'scale(1.06)', f: 'blur(0px) brightness(1) saturate(0)' },
+        { id: 'vivid', name: 'Vivid Pop', t: 'scale(1.05)', f: 'blur(0px) brightness(1) saturate(2.4)' },
     ];
     const TRANS_BY_ID = Object.fromEntries(TRANSITIONS.map(t => [t.id, t]));
     let enabledFx = new Set(TRANSITIONS.map(t => t.id));
@@ -631,7 +663,7 @@
         const ids = [...enabledFx];
         if (!ids.length) return { t: 'scale(1.0)' }; // nothing selected → plain fade
         const tr = TRANS_BY_ID[ids[rnd(ids.length)]];
-        return tr.enters[rnd(tr.enters.length)];
+        return { t: tr.t, f: tr.f };
     }
     // Continuous Ken-Burns drift (start → end over the whole slide)
     const MOTIONS = [
@@ -667,9 +699,9 @@
             } else {
                 const en = pickEnter(), mo = MOTIONS[rnd(MOTIONS.length)], ez = EASES[rnd(EASES.length)];
                 inEl.animate([
-                    { opacity: 0, transform: en.t, filter: en.f || 'blur(0px)', offset: 0, easing: 'cubic-bezier(.22,.61,.36,1)' },
-                    { opacity: 1, transform: mo.s, filter: 'blur(0px) brightness(1)', offset: 0.16, easing: ez },
-                    { opacity: 1, transform: mo.e, filter: 'blur(0px) brightness(1)', offset: 1 },
+                    { opacity: 0, transform: en.t, filter: en.f || FBASE, offset: 0, easing: 'cubic-bezier(.22,.61,.36,1)' },
+                    { opacity: 1, transform: mo.s, filter: FBASE, offset: 0.16, easing: ez },
+                    { opacity: 1, transform: mo.e, filter: FBASE, offset: 1 },
                 ], { duration: dur, fill: 'both' });
             }
             // crossfade the previous image out

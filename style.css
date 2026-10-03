@@ -289,7 +289,8 @@ body.authed .lb.open .lb-del{display:flex}
 .fx-head>div{display:flex;gap:6px}
 .fx-head button{font-size:.58rem;padding:4px 11px;border-radius:100px;border:1px solid var(--border);color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;transition:all .2s}
 .fx-head button:hover{color:var(--gold);border-color:var(--border-gold);background:var(--gold-soft)}
-.fx-grid{display:flex;flex-wrap:wrap;gap:6px}
+.fx-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:230px;overflow-y:auto;scrollbar-width:thin;padding-right:2px}
+.fx-grid::-webkit-scrollbar{width:4px}.fx-grid::-webkit-scrollbar-thumb{background:var(--ink3);border-radius:4px}
 .fx-chip{padding:7px 13px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--ink3);font-size:.7rem;font-weight:500;letter-spacing:.02em;transition:all .15s}
 .fx-chip:hover{color:var(--ink2);border-color:var(--border2)}
 .fx-chip.on{background:var(--gold-soft);border-color:var(--border-gold);color:var(--gold)}
