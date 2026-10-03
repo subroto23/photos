@@ -64,6 +64,7 @@
 
     // Modal
     const modal = $('#uploadModal');
+    $('#openUploadBtn').addEventListener('click', openUploadModal);
     $('#closeModal').addEventListener('click', () => { modal.classList.remove('open'); history.replaceState(null, '', location.pathname); });
     $('#pinSubmitBtn').addEventListener('click', doPin);
     $('#pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') doPin(); });
