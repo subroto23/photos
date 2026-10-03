@@ -13,9 +13,21 @@
  * Plain vars live in wrangler.toml: GH_OWNER, GH_REPO, GH_BRANCH, ALLOWED_ORIGIN
  */
 
-function corsHeaders(env) {
+// Production origin + any localhost/127.0.0.1 (for local dev)
+function isAllowedOrigin(env, origin) {
+  if (!origin) return true; // same-origin or non-browser (curl)
+  if (origin === env.ALLOWED_ORIGIN) return true;
+  try {
+    const h = new URL(origin).hostname;
+    if (h === 'localhost' || h === '127.0.0.1') return true;
+  } catch {}
+  return false;
+}
+
+function corsHeaders(env, origin) {
+  const allow = isAllowedOrigin(env, origin) && origin ? origin : (env.ALLOWED_ORIGIN || '*');
   return {
-    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
+    'Access-Control-Allow-Origin': allow,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
@@ -23,10 +35,10 @@ function corsHeaders(env) {
   };
 }
 
-function json(env, obj, status = 200) {
+function json(env, obj, status = 200, origin) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders(env) },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(env, origin) },
   });
 }
 
@@ -123,48 +135,49 @@ function buildSitemap(photos) {
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get('Origin');
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders(env) });
+      return new Response(null, { status: 204, headers: corsHeaders(env, origin) });
     }
     if (request.method !== 'POST') {
-      return json(env, { error: 'Method not allowed' }, 405);
+      return json(env, { error: 'Method not allowed' }, 405, origin);
     }
 
     // Soft origin check (defense in depth; PIN is the real gate)
-    const origin = request.headers.get('Origin');
-    if (env.ALLOWED_ORIGIN && origin && origin !== env.ALLOWED_ORIGIN) {
-      return json(env, { error: 'Forbidden origin' }, 403);
+    if (!isAllowedOrigin(env, origin)) {
+      return json(env, { error: 'Forbidden origin' }, 403, origin);
     }
 
     const url = new URL(request.url);
     let body;
-    try { body = await request.json(); } catch { return json(env, { error: 'Bad JSON' }, 400); }
+    try { body = await request.json(); } catch { return json(env, { error: 'Bad JSON' }, 400, origin); }
 
     if (!checkPin(env, body.pin)) {
-      return json(env, { error: 'Wrong PIN' }, 401);
+      return json(env, { error: 'Wrong PIN' }, 401, origin);
     }
 
     try {
       // Just verify PIN
       if (url.pathname === '/api/auth') {
-        return json(env, { ok: true });
+        return json(env, { ok: true }, 200, origin);
       }
 
       // Commit one image file
       if (url.pathname === '/api/upload') {
         const { path, content } = body;
-        if (!path || !content) return json(env, { error: 'Missing path/content' }, 400);
+        if (!path || !content) return json(env, { error: 'Missing path/content' }, 400, origin);
         if (!/^photos\/[A-Za-z0-9._\/-]+\.jpg$/.test(path)) {
-          return json(env, { error: 'Invalid path' }, 400);
+          return json(env, { error: 'Invalid path' }, 400, origin);
         }
         await putFile(env, path, content, `Add: ${path.split('/').pop()}`);
-        return json(env, { ok: true });
+        return json(env, { ok: true }, 200, origin);
       }
 
       // Append entries to gallery-data.json + rebuild sitemap.xml
       if (url.pathname === '/api/finalize') {
         const entries = Array.isArray(body.entries) ? body.entries : [];
-        if (!entries.length) return json(env, { error: 'No entries' }, 400);
+        if (!entries.length) return json(env, { error: 'No entries' }, 400, origin);
 
         const { text, sha } = await getContents(env, 'gallery-data.json');
         let gd = { photos: [] };
@@ -180,12 +193,12 @@ export default {
           b64encode(buildSitemap(gd.photos)),
           `Sitemap: ${gd.photos.length} images`);
 
-        return json(env, { ok: true, total: gd.photos.length });
+        return json(env, { ok: true, total: gd.photos.length }, 200, origin);
       }
 
-      return json(env, { error: 'Not found' }, 404);
+      return json(env, { error: 'Not found' }, 404, origin);
     } catch (e) {
-      return json(env, { error: e.message || 'Server error' }, 500);
+      return json(env, { error: e.message || 'Server error' }, 500, origin);
     }
   },
 };
