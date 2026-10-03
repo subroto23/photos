@@ -307,6 +307,7 @@
     $('#uploadBtn').addEventListener('click', async () => {
         if (!picks.length || !userPin) return;
         const cap = capInput.value.trim(), cat = (selectedCat || catInput.value.trim()) || 'General';
+        const desc = $('#photoDescription').value.trim();
         const pf = $('#progressFill'), pt = $('#progressText'), pp = $('#uploadProgress');
         $('#uploadBtn').disabled = true; pp.style.display = 'block';
         try {
@@ -325,6 +326,7 @@
                 await worker('/api/upload', { path: fp, content: b64 });
                 const capFinal = cap || safe.replace(/[-_]/g,' ').replace(/\.\w+$/,'');
                 const entry = { id: `p-${ts}-${Math.random().toString(36).slice(2,6)}`, src: `${RAW}/${fp}`, caption: capFinal, category: cat, date: new Date().toISOString(), alt: `${capFinal} — ${cat} photo by Subroto Das` };
+                if (desc) entry.description = desc;
                 if (exif.dateTaken) entry.dateTaken = exif.dateTaken;
                 if (exif.cameraMake) entry.cameraMake = exif.cameraMake;
                 if (exif.cameraModel) entry.cameraModel = exif.cameraModel;
@@ -339,7 +341,7 @@
             pt.textContent = 'Finalizing...';
             await worker('/api/finalize', { entries });
             pt.textContent = 'Done!'; toast(`${total} photo(s) uploaded!`, 'success');
-            picks = []; $('#previewGrid').innerHTML = ''; capInput.value = ''; catInput.value = ''; selectedCat = ''; fi.value = '';
+            picks = []; $('#previewGrid').innerHTML = ''; capInput.value = ''; catInput.value = ''; $('#photoDescription').value = ''; selectedCat = ''; fi.value = '';
             setTimeout(() => { pp.style.display = 'none'; pf.style.width = '0%'; }, 800);
             photos = [...photos, ...entries]; updateSEO(); buildCatFilter(); applyFilter();
         } catch (e) { toast(`Failed: ${e.message}`, 'error'); pt.textContent = 'Failed'; }
@@ -355,17 +357,24 @@
         const cat = p.category && p.category !== 'General' ? `${p.category} ` : '';
         return `${cat}Photo by Subroto Das — ${dateStr}${cam}`;
     }
+    const hasName = s => /subroto\s*das/i.test(s || '');
+    function withName(s, suffix) { return hasName(s) ? s : (s ? `${s}${suffix}` : 'Photo by Subroto Das'); }
+
     function seoAlt(p) {
-        if (p.alt && p.alt.trim()) return p.alt.trim();
-        return `${seoTitle(p)} | Subroto Das Photography`;
+        const base = (p.alt && p.alt.trim()) ? p.alt.trim() : `${seoTitle(p)} | Subroto Das Photography`;
+        return withName(base, ' — Photo by Subroto Das');
     }
     function seoDesc(p) {
+        // Custom description (if the author wrote one) takes priority for SEO
+        if (p.description && p.description.trim()) {
+            return withName(p.description.trim(), ' — Photo by Subroto Das');
+        }
         const parts = [seoTitle(p)];
         if (p.cameraModel) parts.push(`Shot on ${p.cameraMake ? p.cameraMake + ' ' : ''}${p.cameraModel}`);
         if (p.aperture) parts.push(p.aperture);
         if (p.iso) parts.push(p.iso);
         if (p.focalLength) parts.push(p.focalLength);
-        return parts.join(' · ');
+        return withName(parts.join(' · '), ' · Photo by Subroto Das');
     }
 
     // Dynamic JSON-LD for all photos
@@ -636,7 +645,7 @@
         if (filtered.length < 2) { toast('Need more photos', 'info'); return; }
         clearInterval(slideTimer);
         lb.classList.add('slideshow');
-        lb.classList.toggle('has-music', MUSIC_TRACKS.length > 0);
+        lb.classList.toggle('has-music', musicTracks.length > 0);
         slideTimer = setInterval(() => openLB((lbi + 1) % filtered.length), SLIDE_MS);
         setPlayBtn(true);
         setSoundBtn();
@@ -646,23 +655,35 @@
     function toggleSlideshow() { isPlaying() ? stopSlideshow() : startSlideshow(); }
     $('#lightboxPlay').addEventListener('click', e => { e.stopPropagation(); toggleSlideshow(); });
 
-    // === Background music (add your own royalty-free / licensed tracks) ===
-    // Copyrighted Hindi songs cannot be bundled — drop your own .mp3 files in
-    // a /music folder and list them here, e.g. 'music/song1.mp3'.
-    const MUSIC_TRACKS = [
-        // 'music/track-1.mp3',
-        // 'music/track-2.mp3',
-    ];
+    // === Background music — free & royalty-free, random each time ===
+    // Works out of the box with keyless royalty-free tracks (SoundHelix).
+    // For Bollywood/Indian royalty-free music, get a FREE client id from
+    // https://developer.jamendo.com and paste it below — tracks load automatically.
+    const JAMENDO_CLIENT_ID = '';
+    let musicTracks = Array.from({ length: 16 }, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i + 1}.mp3`);
+    async function loadMusic() {
+        if (!JAMENDO_CLIENT_ID) return;
+        try {
+            const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=50&fuzzytags=bollywood+indian+instrumental&audioformat=mp31&order=popularity_total&include=musicinfo`;
+            const r = await fetch(url);
+            const j = await r.json();
+            const urls = (j.results || []).map(t => t.audio).filter(Boolean);
+            if (urls.length) musicTracks = urls;
+        } catch {}
+    }
+    loadMusic();
+
     const audio = $('#ssAudio');
     let soundMuted = false;
     function pickTrack() {
-        if (!MUSIC_TRACKS.length) return null;
-        return MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)];
+        if (!musicTracks.length) return null;
+        return musicTracks[Math.floor(Math.random() * musicTracks.length)];
     }
     function startMusic() {
         const t = pickTrack();
-        if (!t) return; // no tracks configured yet
+        if (!t) return;
         if (!audio.src || audio.ended || audio.paused) { audio.src = t; }
+        audio.volume = 0.55;
         audio.muted = soundMuted;
         audio.play().catch(() => {});
     }

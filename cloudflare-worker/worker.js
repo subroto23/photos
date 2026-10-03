@@ -115,13 +115,18 @@ function seoTitle(p) {
   const cat = p.category && p.category !== 'General' ? `${p.category} ` : '';
   return `${cat}Photo by Subroto Das — ${dateStr}${cam}`;
 }
+function withName(s, suffix) {
+  const has = /subroto\s*das/i.test(s || '');
+  return has ? s : (s ? `${s}${suffix}` : 'Photo by Subroto Das');
+}
 function seoDesc(p) {
+  if (p.description && p.description.trim()) return withName(p.description.trim(), ' — Photo by Subroto Das');
   const parts = [seoTitle(p)];
   if (p.cameraModel) parts.push(`Shot on ${p.cameraMake ? p.cameraMake + ' ' : ''}${p.cameraModel}`);
   if (p.aperture) parts.push(p.aperture);
   if (p.iso) parts.push(p.iso);
   if (p.focalLength) parts.push(p.focalLength);
-  return parts.join(' · ');
+  return withName(parts.join(' · '), ' · Photo by Subroto Das');
 }
 
 function buildSitemap(photos) {
