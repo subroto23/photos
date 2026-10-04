@@ -69,7 +69,9 @@
     // Modal
     const modal = $('#uploadModal');
     $('#openUploadBtn').addEventListener('click', openUploadModal);
-    $('#closeModal').addEventListener('click', () => { modal.classList.remove('open'); history.replaceState(null, '', location.pathname); });
+    const closeUploadModal = () => { modal.classList.remove('open'); history.replaceState(null, '', location.pathname); };
+    $('#closeModal').addEventListener('click', closeUploadModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeUploadModal(); });
     $('#pinSubmitBtn').addEventListener('click', doPin);
     $('#pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') doPin(); });
 
@@ -84,8 +86,13 @@
             toast('Unlocked', 'success');
             $('#pinGate').style.display = 'none'; $('#uploadForm').style.display = 'block'; lucide.createIcons();
         } catch (e) {
+            // Wrong PIN (or auth failed) — stay locked, never reveal the form
             userPin = null;
+            document.body.classList.remove('authed');
+            $('#uploadForm').style.display = 'none';
+            $('#pinGate').style.display = 'block';
             $('#pinError').classList.add('show'); $('#pinInput').value = '';
+            setTimeout(() => $('#pinInput').focus(), 30);
         }
         b.disabled = false; b.textContent = 'Unlock';
     }

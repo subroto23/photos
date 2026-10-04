@@ -129,6 +129,25 @@ function seoDesc(p) {
   return withName(parts.join(' · '), ' · Photo by Subroto Das');
 }
 
+// IndexNow — instantly notify search engines (Bing, Yandex, Seznam, Naver…) on change.
+// The key is public and served as /<key>.txt on the site.
+const INDEXNOW_KEY = '985a261135b1a6047a235e2acbd3a3bd';
+async function pingIndexNow(urls) {
+  try {
+    const list = [...new Set(['https://photos.subromart.com/', ...urls])].filter(Boolean).slice(0, 100);
+    await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        host: 'photos.subromart.com',
+        key: INDEXNOW_KEY,
+        keyLocation: `https://photos.subromart.com/${INDEXNOW_KEY}.txt`,
+        urlList: list,
+      }),
+    });
+  } catch {}
+}
+
 function buildSitemap(photos) {
   const SITE = 'https://photos.subromart.com/';
   const today = new Date().toISOString().slice(0, 10);
@@ -198,6 +217,7 @@ export default {
           b64encode(buildSitemap(gd.photos)),
           `Sitemap: ${gd.photos.length} images`);
 
+        await pingIndexNow(entries.map(e => e.src));
         return json(env, { ok: true, total: gd.photos.length }, 200, origin);
       }
 
@@ -234,6 +254,7 @@ export default {
         if (gd.photos.length !== before) {
           await putFile(env, 'gallery-data.json', b64encode(JSON.stringify(gd, null, 2)), 'Gallery -1', sha);
           await putFile(env, 'sitemap.xml', b64encode(buildSitemap(gd.photos)), `Sitemap: ${gd.photos.length} images`);
+          await pingIndexNow([]);
         }
         return json(env, { ok: true, total: gd.photos.length, removed: before - gd.photos.length }, 200, origin);
       }
