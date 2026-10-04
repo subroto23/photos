@@ -3,6 +3,8 @@
     const GH_OWNER = 'subroto23', GH_REPO = 'photos', GH_BRANCH = 'main';
     const DATA = 'gallery-data.json', DIR = 'photos';
     const RAW = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}`;
+    // Images are served from the OWN domain (better image SEO than raw.githubusercontent)
+    const SITE = 'https://photos.subromart.com';
     // Cloudflare Worker backend — holds GitHub token + PIN as secrets (browser never sees them).
     const WORKER = 'https://subro-gallery-upload.subrotodas1714037.workers.dev';
 
@@ -325,7 +327,7 @@
                 pf.style.width = `${((done+.5)/total)*100}%`;
                 await worker('/api/upload', { path: fp, content: b64 });
                 const capFinal = cap || safe.replace(/[-_]/g,' ').replace(/\.\w+$/,'');
-                const entry = { id: `p-${ts}-${Math.random().toString(36).slice(2,6)}`, src: `${RAW}/${fp}`, caption: capFinal, category: cat, date: new Date().toISOString(), alt: `${capFinal} — ${cat} photo by Subroto Das` };
+                const entry = { id: `p-${ts}-${Math.random().toString(36).slice(2,6)}`, src: `${SITE}/${fp}`, caption: capFinal, category: cat, date: new Date().toISOString(), alt: `${capFinal} — ${cat} photo by Subroto Das` };
                 if (desc) entry.description = desc;
                 if (exif.dateTaken) entry.dateTaken = exif.dateTaken;
                 if (exif.cameraMake) entry.cameraMake = exif.cameraMake;
@@ -924,7 +926,9 @@
     async function deletePhoto(photo) {
         if (!userPin || !photo) { toast('Unlock with PIN first', 'error'); return; }
         if (!confirm('Delete this photo permanently? This cannot be undone.')) return;
-        const path = photo.src && photo.src.startsWith(RAW + '/') ? photo.src.slice(RAW.length + 1) : null;
+        const src = photo.src || '';
+        const path = src.startsWith(SITE + '/') ? src.slice(SITE.length + 1)
+            : src.startsWith(RAW + '/') ? src.slice(RAW.length + 1) : null;
         const delBtn = $('#lightboxDelete'); delBtn.disabled = true;
         try {
             await worker('/api/delete', { id: photo.id, path });
