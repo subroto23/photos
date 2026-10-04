@@ -370,7 +370,7 @@
     function withName(s, suffix) { return hasName(s) ? s : (s ? `${s}${suffix}` : 'Photo by Subroto Das'); }
 
     function seoAlt(p) {
-        const base = (p.alt && p.alt.trim()) ? p.alt.trim() : `${seoTitle(p)} | Subroto Das Photography`;
+        const base = (p.alt && p.alt.trim()) ? p.alt.trim() : `${seoTitle(p)} | Subroto Das Photos`;
         return withName(base, ' — Photo by Subroto Das');
     }
     function seoDesc(p) {
