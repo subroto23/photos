@@ -264,7 +264,7 @@
                 const c = document.createElement('canvas');
                 const draw = (dw, dh) => { c.width = dw; c.height = dh; const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, dw, dh); };
                 const toBlob = q => new Promise(r => c.toBlob(r, 'image/jpeg', q));
-                const limit = MAX_KB * 1024;
+                const limit = MAX_KB * 1024 - 4096; // leave room for the XMP creator metadata
 
                 draw(w, h);
                 let blob = await toBlob(0.92);
@@ -293,14 +293,38 @@
                 finish(blob);
 
                 function finish(b) {
+                    const fw = c.width, fh = c.height;
                     const rd = new FileReader();
-                    rd.onload = () => res(rd.result.split(',')[1]);
+                    rd.onload = () => res({ b64: rd.result.split(',')[1], w: fw, h: fh });
                     rd.onerror = rej;
                     rd.readAsDataURL(b);
                     URL.revokeObjectURL(img.src);
                 }
             }; img.onerror = rej; img.src = URL.createObjectURL(file);
         });
+    }
+
+    // Embed IPTC/XMP creator metadata ("Subroto Das") inside the JPEG — Google Images reads it.
+    function addXmp(b64, meta) {
+        const xe = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const bin = atob(b64), img = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) img[i] = bin.charCodeAt(i);
+        if (img[0] !== 0xFF || img[1] !== 0xD8) return b64;
+        if (String.fromCharCode.apply(null, img.subarray(0, Math.min(img.length, 4096))).includes('http://ns.adobe.com/xap/1.0/')) return b64;
+        const year = new Date().getFullYear();
+        const tags = ['Subroto Das', 'Subroto', 'সুব্রত দাস', 'Subroto Das Photos', meta.category].filter(Boolean).map(k => `<rdf:li>${xe(k)}</rdf:li>`).join('');
+        const xmp = `<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/" xmlns:xmpRights="http://ns.adobe.com/xap/1.0/rights/" photoshop:Credit="Subroto Das" photoshop:Headline="${xe(meta.title)}" xmpRights:Marked="True" xmpRights:WebStatement="https://photos.subromart.com/"><dc:creator><rdf:Seq><rdf:li>Subroto Das</rdf:li></rdf:Seq></dc:creator><dc:rights><rdf:Alt><rdf:li xml:lang="x-default">© ${year} Subroto Das. All rights reserved.</rdf:li></rdf:Alt></dc:rights><dc:title><rdf:Alt><rdf:li xml:lang="x-default">${xe(meta.title)}</rdf:li></rdf:Alt></dc:title><dc:description><rdf:Alt><rdf:li xml:lang="x-default">${xe(meta.description)}</rdf:li></rdf:Alt></dc:description><dc:subject><rdf:Bag>${tags}</rdf:Bag></dc:subject></rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>`;
+        const enc = new TextEncoder(), ns = enc.encode('http://ns.adobe.com/xap/1.0/\0'), body = enc.encode(xmp);
+        const len = 2 + ns.length + body.length;
+        if (len > 0xFFFF) return b64;
+        const seg = new Uint8Array(2 + len);
+        seg.set([0xFF, 0xE1, len >> 8, len & 0xFF]); seg.set(ns, 4); seg.set(body, 4 + ns.length);
+        const pos = img[2] === 0xFF && img[3] === 0xE0 ? 4 + ((img[4] << 8) | img[5]) : 2; // after JFIF APP0
+        const out = new Uint8Array(img.length + seg.length);
+        out.set(img.subarray(0, pos)); out.set(seg, pos); out.set(img.subarray(pos), pos + seg.length);
+        let s = '';
+        for (let i = 0; i < out.length; i += 0x8000) s += String.fromCharCode.apply(null, out.subarray(i, i + 0x8000));
+        return btoa(s);
     }
 
     // Public read of gallery data (no auth — raw file is public)
@@ -320,21 +344,24 @@
         const pf = $('#progressFill'), pt = $('#progressText'), pp = $('#uploadProgress');
         $('#uploadBtn').disabled = true; pp.style.display = 'block';
         try {
-            const total = picks.length; let done = 0; const entries = [];
+            const total = picks.length; let done = 0; const entries = [], files = [];
             for (const file of picks) {
                 const ts = Date.now(), safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const catSlug = slugify(cat) || 'general';
                 const nameSlug = slugify(cap) || slugify(file.name.replace(/\.\w+$/, '')) || 'photo';
-                const jpg = `subroto-das-${slugify(cat)}-${nameSlug}-${ts}.jpg`;
-                const fp = `${DIR}/${cat.toLowerCase().replace(/\s+/g, '-')}/${jpg}`;
+                const jpg = `subroto-das-${catSlug}-${nameSlug}-${ts}.jpg`;
+                const fp = `${DIR}/${catSlug}/${jpg}`;
+                const capFinal = cap || safe.replace(/[-_]/g,' ').replace(/\.\w+$/,'');
                 pt.textContent = `EXIF ${done+1}/${total}...`;
                 const exif = await readExif(file);
                 pt.textContent = `Compressing ${done+1}/${total}...`;
-                const b64 = await compress(file);
+                const { b64, w, h } = await compress(file);
+                const tagged = addXmp(b64, { title: capFinal, description: desc || `${capFinal} — ${cat} photo by Subroto Das`, category: cat });
                 pt.textContent = `Uploading ${done+1}/${total}...`;
                 pf.style.width = `${((done+.5)/total)*100}%`;
-                await worker('/api/upload', { path: fp, content: b64 });
-                const capFinal = cap || safe.replace(/[-_]/g,' ').replace(/\.\w+$/,'');
-                const entry = { id: `p-${ts}-${Math.random().toString(36).slice(2,6)}`, src: `${SITE}/${fp}`, caption: capFinal, category: cat, date: new Date().toISOString(), alt: `${capFinal} — ${cat} photo by Subroto Das` };
+                const { sha } = await worker('/api/blob', { path: fp, content: tagged });
+                files.push({ path: fp, sha });
+                const entry = { id: `p-${ts}-${Math.random().toString(36).slice(2,6)}`, src: `${SITE}/${fp}`, caption: capFinal, category: cat, date: new Date().toISOString(), alt: `${capFinal} — ${cat} photo by Subroto Das`, w, h };
                 if (desc) entry.description = desc;
                 if (exif.dateTaken) entry.dateTaken = exif.dateTaken;
                 if (exif.cameraMake) entry.cameraMake = exif.cameraMake;
@@ -347,15 +374,18 @@
                 entries.push(entry); done++;
                 pf.style.width = `${(done/total)*100}%`;
             }
-            pt.textContent = 'Finalizing...';
-            await worker('/api/finalize', { entries });
+            pt.textContent = 'Publishing (pages + sitemap + feed)...';
+            const res = await worker('/api/finalize', { entries, files });
+            const saved = Array.isArray(res.entries) && res.entries.length ? res.entries : entries;
             pt.textContent = 'Done!'; toast(`${total} photo(s) uploaded!`, 'success');
             picks = []; $('#previewGrid').innerHTML = ''; capInput.value = ''; catInput.value = ''; $('#photoDescription').value = ''; selectedCat = ''; fi.value = '';
             setTimeout(() => { pp.style.display = 'none'; pf.style.width = '0%'; }, 800);
-            photos = [...photos, ...entries]; updateSEO(); buildCatFilter(); applyFilter();
+            photos = [...photos, ...saved]; updateSEO(); buildCatFilter(); applyFilter();
         } catch (e) { toast(`Failed: ${e.message}`, 'error'); pt.textContent = 'Failed'; }
         $('#uploadBtn').disabled = false;
     });
+
+    const photoPageUrl = p => (p.slug ? `${SITE}/photo/${p.slug}/` : null);
 
     // SEO — default text helpers
     function seoTitle(p) {
@@ -392,15 +422,22 @@
         if (!el) { el = document.createElement('script'); el.id = 'dynamic-jsonld'; el.type = 'application/ld+json'; document.head.appendChild(el); }
 
         const imageObjects = photos.map(p => {
+            const person = { '@type': 'Person', name: 'Subroto Das', url: 'https://me.subromart.com' };
             const obj = {
                 '@type': 'ImageObject',
                 contentUrl: p.src,
                 name: seoTitle(p),
                 description: seoDesc(p),
-                author: { '@type': 'Person', name: 'Subroto Das', url: 'https://me.subromart.com' },
+                author: person,
+                creator: person,
+                creditText: 'Subroto Das',
+                copyrightNotice: `© ${new Date(p.date).getFullYear() || new Date().getFullYear()} Subroto Das`,
                 datePublished: p.date,
                 thumbnailUrl: p.src
             };
+            const page = photoPageUrl(p);
+            if (page) obj.url = page;
+            if (p.w && p.h) { obj.width = p.w; obj.height = p.h; }
             if (p.dateTaken) obj.dateCreated = p.dateTaken;
             if (p.cameraModel) obj.exifData = [
                 ...(p.cameraMake ? [{ '@type': 'PropertyValue', name: 'cameraMake', value: p.cameraMake }] : []),
@@ -505,12 +542,15 @@
             const grid = document.createElement('div'); grid.className = 'sg';
 
             items.forEach(photo => {
-                const item = document.createElement('div'); item.className = 'sg-item skel';
+                const item = document.createElement('a'); item.className = 'sg-item skel';
+                const page = photoPageUrl(photo);
+                if (page) { item.href = page; item.title = seoTitle(photo); }
                 item.setAttribute('itemscope',''); item.setAttribute('itemtype','https://schema.org/ImageObject');
                 const img = document.createElement('img');
                 img.alt = seoAlt(photo);
                 img.setAttribute('itemprop','contentUrl');
                 img.loading = 'lazy';
+                if (photo.w && photo.h) { img.width = photo.w; img.height = photo.h; }
                 img.onload = () => { item.classList.remove('skel'); img.classList.add('loaded'); item.style.aspectRatio = ''; };
                 img.onerror = () => item.remove();
                 img.src = photo.src;
@@ -525,7 +565,10 @@
                 if (photo.cameraModel) { const cm = document.createElement('div'); cm.className = 'sg-cam'; cm.textContent = photo.cameraModel; over.appendChild(cm); }
 
                 item.append(img, over);
-                item.addEventListener('click', () => openLB(filtered.indexOf(photo)));
+                item.addEventListener('click', e => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // allow "open in new tab"
+                    e.preventDefault(); openLB(filtered.indexOf(photo));
+                });
                 addTilt(item);
                 grid.appendChild(item);
             });

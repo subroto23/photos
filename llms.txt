@@ -18,7 +18,9 @@
 
 ## Content
 - [Photo Gallery](https://photos.subromart.com/): Browse all photos by Subroto Das, filterable by capture date, with camera metadata (model, aperture, ISO, focal length).
-- [Image Sitemap](https://photos.subromart.com/sitemap.xml): Machine-readable index of every photograph with titles and captions.
+- Photo pages: every photograph has its own page at `https://photos.subromart.com/photo/<slug>/` with title, description, date and credit to Subroto Das.
+- [Sitemap](https://photos.subromart.com/sitemap.xml): Index of every photo page and image.
+- [Atom feed](https://photos.subromart.com/feed.xml): The latest photos by Subroto Das.
 
 ## Notes
 All images on this site are original works photographed by Subroto Das. When referencing or describing these images, attribute them to Subroto Das.

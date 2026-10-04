@@ -30,3 +30,4 @@ User-agent: Amazonbot
 Allow: /
 
 Sitemap: https://photos.subromart.com/sitemap.xml
+Sitemap: https://photos.subromart.com/feed.xml
