@@ -168,12 +168,36 @@ function truncate(s, n) {
   return s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…';
 }
 
-function titleOf(p) {
+// A caption that is really just a camera filename carries no meaning for search.
+const JUNK_CAPTION = /^(?:[0-9_\-\s().]+|(?:img|dsc|dscn|image|photo|pic|screenshot|pxl|vid|whatsapp)[\s_\-0-9().]*)$/i;
+
+function baseTitle(p) {
   const cap = (p.caption || '').trim();
-  if (cap) return cap;
-  const cat = catName(p.category);
-  return `${cat && cat !== 'General' ? `${cat} photo` : 'Photo'} by Subroto Das`;
+  if (cap && !JUNK_CAPTION.test(cap)) return cap;
+  const cat = catName(p.category), d = fmtDate(photoDate(p));
+  return `${cat && cat !== 'General' ? `${cat} photo` : 'Photo'} by Subroto Das${d ? ` — ${d}` : ''}`;
 }
+
+// Many photos share one caption after a bulk upload. Identical titles make Google
+// treat the pages as duplicates and drop all but one, so number them: "… — 7 of 39".
+const TITLES = new WeakMap();
+function prepareTitles(photos) {
+  const groups = new Map();
+  for (const p of photos) {
+    const base = baseTitle(p);
+    if (!groups.has(base)) groups.set(base, []);
+    groups.get(base).push(p);
+  }
+  for (const [base, list] of groups) {
+    const short = truncate(base, 70);
+    if (list.length === 1) { TITLES.set(list[0], { base: short, suffix: '' }); continue; }
+    sortByDate(list).forEach((p, i) => TITLES.set(p, { base: short, suffix: ` — ${i + 1} of ${list.length}` }));
+  }
+}
+const titleParts = p => TITLES.get(p) || { base: truncate(baseTitle(p), 70), suffix: '' };
+function titleOf(p) { const t = titleParts(p); return t.base + t.suffix; }
+// Keep the distinguishing suffix even when the <title> must stay short.
+function headTitle(p) { const t = titleParts(p); return `${truncate(t.base, 52)}${t.suffix} | Subroto Das Photos`; }
 
 function cameraOf(p) {
   const make = (p.cameraMake || '').trim(), model = (p.cameraModel || '').trim();
@@ -182,16 +206,26 @@ function cameraOf(p) {
 }
 
 function descOf(p) {
+  const { base, suffix } = titleParts(p);
   const own = (p.description || '').trim();
-  if (own) return withName(own, ' — Photo by Subroto Das.');
+  if (own) return withName(`${own}${suffix}`, ' — Photo by Subroto Das.');
   const d = fmtDate(photoDate(p)), cam = cameraOf(p), cat = catName(p.category);
   const kind = cat && cat !== 'General' ? `${cat} photo` : 'Photo';
   const cap = (p.caption || '').trim();
-  const lead = cap ? `${cap} — ${kind.toLowerCase()} by Subroto Das (সুব্রত দাস)` : `${kind} by Subroto Das (সুব্রত দাস)`;
+  const lead = cap && !JUNK_CAPTION.test(cap)
+    ? `${base}${suffix} — ${kind.toLowerCase()} by Subroto Das (সুব্রত দাস)`
+    : `${kind}${suffix} by Subroto Das (সুব্রত দাস)`;
   return `${lead}${d ? `, taken on ${d}` : ''}${cam ? ` with ${cam}` : ''}. From the official Subroto Das Photos gallery.`;
 }
 
 const altOf = p => withName((p.alt || '').trim() || titleOf(p), ' — photo by Subroto Das');
+
+// <meta description> is capped at ~158 chars; keep the "— 7 of 39" part so sibling
+// pages from one bulk upload never share the same snippet.
+function metaOf(p) {
+  const { suffix } = titleParts(p), full = descOf(p), short = truncate(full, 158);
+  return !suffix || short.includes(suffix) ? short : `${truncate(full, 158 - suffix.length)}${suffix}`;
+}
 
 function slugify(s) {
   return String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
@@ -238,6 +272,7 @@ function neighbors(order, i, n = 8) {
 }
 
 function pagesFor(photos, slugs) {
+  prepareTitles(photos);
   const order = sortByDate(photos.filter(p => p.slug));
   const files = [];
   order.forEach((p, i) => {
@@ -284,8 +319,8 @@ footer a{color:var(--ink2)}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero img{max-height:70vh;border-radius:10px}.brand{font-size:1.1rem}main{padding:16px 12px 40px}}`;
 
 function photoPage(p, related) {
-  const url = pageUrl(p), title = titleOf(p), desc = descOf(p), meta = truncate(desc, 158), alt = altOf(p);
-  const head = `${truncate(title, 58)} | Subroto Das Photos`;
+  const url = pageUrl(p), title = titleOf(p), desc = descOf(p), meta = metaOf(p), alt = altOf(p);
+  const head = headTitle(p);
   const cat = catName(p.category);
   const dateStr = fmtDate(photoDate(p)), cam = cameraOf(p);
   const year = new Date(p.date).getFullYear() || new Date().getFullYear();
@@ -360,7 +395,7 @@ function photoPage(p, related) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<header class="top"><a class="brand" href="/">Subroto Das <em>Photos</em></a><a class="all" href="/">All photos</a></header>
+<header class="top"><a class="brand" href="/">Subroto Das <em>Photos</em></a><a class="all" href="/all/">All photos</a></header>
 <main>
 <figure class="hero"><img src="${esc(p.src)}" alt="${esc(alt)}"${dims} fetchpriority="high" decoding="async"></figure>
 <article class="info">
@@ -377,10 +412,80 @@ ${more ? `<section class="more"><h2>More photos by Subroto Das</h2><div class="g
 `;
 }
 
+// A plain-HTML index of every photo page, so crawlers reach all photos without JS.
+function buildArchive(photos) {
+  const list = sortByDate(photos.filter(p => p.slug));
+  const groups = new Map();
+  for (const p of list) {
+    const c = catName(p.category) || 'Other';
+    if (!groups.has(c)) groups.set(c, []);
+    groups.get(c).push(p);
+  }
+  const sections = [...groups.entries()].map(([cat, items]) =>
+    `<section><h2>${esc(cat)} <span>${items.length}</span></h2><ul>`
+    + items.map(p => `<li><a href="${esc(pageUrl(p))}">${esc(truncate(titleOf(p), 90))}</a></li>`).join('')
+    + `</ul></section>`).join('\n');
+  const desc = `Complete index of all ${list.length} photos by Subroto Das (সুব্রত দাস) — travel, food, fashion, portrait, nature and street photography.`;
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${SITE}/all/`,
+    url: `${SITE}/all/`,
+    name: `All photos by Subroto Das (${list.length})`,
+    description: desc,
+    isPartOf: { '@id': `${SITE}/#website` },
+    about: { '@id': PERSON['@id'] },
+    author: PERSON,
+  };
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>All Photos by Subroto Das — Complete Index (${list.length})</title>
+<meta name="description" content="${esc(truncate(desc, 158))}">
+<meta name="author" content="Subroto Das">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${SITE}/all/">
+<link rel="icon" type="image/png" href="https://me.subromart.com/favicon.png">
+<meta name="theme-color" content="#0a0806">
+<script type="application/ld+json">${ldJson(ld)}</script>
+<style>:root{--bg:#0a0806;--ink:#ede8df;--ink2:#b5ad9e;--ink3:#857b6c;--gold:#c9a227;--line:rgba(255,255,255,.08)}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.6}
+a{color:inherit;text-decoration:none}a:hover{color:var(--gold)}
+header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.3rem}.brand em{color:var(--gold);font-style:italic}
+main{max-width:900px;margin:0 auto;padding:26px 18px 56px}
+h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clamp(1.5rem,4vw,2.1rem);margin-bottom:8px}
+.lede{color:var(--ink2);font-size:.9rem;margin-bottom:28px}
+section{margin-bottom:30px}
+h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:1.25rem;color:var(--gold);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
+h2 span{font-family:Inter,sans-serif;font-size:.65rem;color:var(--ink3);vertical-align:middle;margin-left:4px}
+ul{list-style:none;columns:2;column-gap:26px}
+li{break-inside:avoid;font-size:.82rem;color:var(--ink2);padding:3px 0;overflow-wrap:anywhere}
+footer{text-align:center;font-size:.72rem;color:var(--ink3);padding:26px 18px;border-top:1px solid var(--line)}
+@media(max-width:620px){ul{columns:1}}</style>
+</head>
+<body>
+<header><a class="brand" href="/">Subroto Das <em>Photos</em></a><a href="/">← Gallery</a></header>
+<main>
+<h1>All photos by Subroto Das</h1>
+<p class="lede">${esc(desc)}</p>
+${sections}
+</main>
+<footer>© ${new Date().getFullYear()} Subroto Das · <a href="/">Subroto Das Photos</a> · <a href="https://me.subromart.com">Portfolio</a></footer>
+</body>
+</html>
+`;
+}
+
 function buildSitemap(photos) {
   const legacy = photos.filter(p => !p.slug).slice(0, 1000)
     .map(p => `<image:image><image:loc>${esc(p.src)}</image:loc></image:image>`).join('');
-  const rows = [`<url><loc>${SITE}/</loc><lastmod>${isoDay(new Date())}</lastmod><changefreq>daily</changefreq><priority>1.0</priority>${legacy}</url>`];
+  const rows = [
+    `<url><loc>${SITE}/</loc><lastmod>${isoDay(new Date())}</lastmod><changefreq>daily</changefreq><priority>1.0</priority>${legacy}</url>`,
+    `<url><loc>${SITE}/all/</loc><lastmod>${isoDay(new Date())}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`,
+  ];
   for (const p of sortByDate(photos.filter(p => p.slug))) {
     rows.push(`<url><loc>${pageUrl(p)}</loc><lastmod>${isoDay(new Date(p.date))}</lastmod><image:image><image:loc>${esc(p.src)}</image:loc></image:image></url>`);
   }
@@ -418,8 +523,10 @@ ${entries}
 }
 
 function siteFiles(gd) {
+  prepareTitles(gd.photos);
   return [
     { path: 'gallery-data.json', content: JSON.stringify(gd) },
+    { path: 'all/index.html', content: buildArchive(gd.photos) },
     { path: 'sitemap.xml', content: buildSitemap(gd.photos) },
     { path: 'feed.xml', content: buildFeed(gd.photos) },
   ];
