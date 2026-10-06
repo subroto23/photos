@@ -416,12 +416,16 @@
         return withName(parts.join(' · '), ' · Photo by Subroto Das');
     }
 
-    // Dynamic JSON-LD for all photos
+    // Dynamic JSON-LD. Only a sample of the newest photos is embedded here —
+    // every photo already has its own page carrying full ImageObject data, and
+    // emitting hundreds of them would bloat the DOM and slow rendering badly.
+    const LD_SAMPLE = 24;
     function updateSEO() {
         let el = document.getElementById('dynamic-jsonld');
         if (!el) { el = document.createElement('script'); el.id = 'dynamic-jsonld'; el.type = 'application/ld+json'; document.head.appendChild(el); }
 
-        const imageObjects = photos.map(p => {
+        const newest = [...photos].sort((a, b) => getPhotoDate(b) - getPhotoDate(a)).slice(0, LD_SAMPLE);
+        const imageObjects = newest.map(p => {
             const person = { '@type': 'Person', name: 'Subroto Das', url: 'https://me.subromart.com' };
             const obj = {
                 '@type': 'ImageObject',
@@ -454,10 +458,14 @@
         el.textContent = JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'ImageGallery',
-            name: 'Subroto Das Photo Gallery',
-            url: 'https://photos.subromart.com',
-            description: `Photography collection by Subroto Das — ${photos.length} photos`,
+            '@id': `${SITE}/#gallery`,
+            name: 'Subroto Das Photos',
+            url: `${SITE}/`,
+            description: `Photo gallery of Subroto Das (সুব্রত দাস) — ${photos.length} photos including travel, food, fashion, portrait, nature and street photography.`,
             author: { '@type': 'Person', name: 'Subroto Das', jobTitle: 'Software Engineer', url: 'https://me.subromart.com' },
+            // Full index of every photo page lives in the sitemap and at /all/
+            mainEntityOfPage: `${SITE}/`,
+            hasPart: { '@type': 'CollectionPage', name: `All ${photos.length} photos by Subroto Das`, url: `${SITE}/all/` },
             image: imageObjects
         });
     }
