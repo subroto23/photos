@@ -98,6 +98,11 @@ async function exists(env, path, ref) {
   return r.ok;
 }
 
+async function readText(env, path, ref) {
+  const r = await gh(env, `contents/${path}?ref=${ref}`, { headers: { Accept: 'application/vnd.github.raw+json' } });
+  return r.ok ? r.text() : null;
+}
+
 async function readGallery(env, ref) {
   const r = await gh(env, `contents/gallery-data.json?ref=${ref}`, { headers: { Accept: 'application/vnd.github.raw+json' } });
   if (r.status === 404) return { photos: [] };
@@ -412,6 +417,30 @@ ${more ? `<section class="more"><h2>More photos by Subroto Das</h2><div class="g
 `;
 }
 
+// Static preview injected into the homepage between the AUTO:LATEST markers.
+// Crawlers (and AI agents, which don't run JavaScript) otherwise see an empty
+// gallery; the script replaces this with the interactive grid for real visitors.
+const HOME_START = '<!--AUTO:LATEST-->', HOME_END = '<!--/AUTO:LATEST-->';
+const HOME_COUNT = 24;
+
+function buildHomeBlock(photos) {
+  const list = sortByDate(photos.filter(p => p.slug)).slice(0, HOME_COUNT);
+  if (!list.length) return '';
+  const cats = [...new Set(photos.map(p => catName(p.category)).filter(Boolean))].sort();
+  const items = list.map(p =>
+    `<li><a href="${esc(pageUrl(p))}"><img src="${esc(p.src)}" alt="${esc(altOf(p))}"${p.w && p.h ? ` width="${p.w}" height="${p.h}"` : ''} loading="lazy" decoding="async"><span>${esc(truncate(titleOf(p), 70))}</span></a></li>`
+  ).join('');
+  return `${HOME_START}<section class="static-latest"><h2>Latest photos by Subroto Das</h2>`
+    + `<p>${photos.length} photos by Subroto Das (সুব্রত দাস) — ${esc(cats.slice(0, 8).join(', '))}. `
+    + `<a href="/all/">Browse all ${photos.length} photos</a>.</p><ul>${items}</ul></section>${HOME_END}`;
+}
+
+function injectHome(html, photos) {
+  const a = html.indexOf(HOME_START), b = html.indexOf(HOME_END);
+  if (a < 0 || b < 0 || b < a) return null; // markers missing — leave index.html alone
+  return html.slice(0, a) + buildHomeBlock(photos) + html.slice(b + HOME_END.length);
+}
+
 // A plain-HTML index of every photo page, so crawlers reach all photos without JS.
 function buildArchive(photos) {
   const list = sortByDate(photos.filter(p => p.slug));
@@ -522,6 +551,14 @@ ${entries}
 `;
 }
 
+// Refreshes the homepage's static preview; skipped if index.html lacks the markers.
+async function homeFile(env, gd, ref) {
+  const html = await readText(env, 'index.html', ref);
+  if (!html) return [];
+  const next = injectHome(html, gd.photos);
+  return next && next !== html ? [{ path: 'index.html', content: next }] : [];
+}
+
 function siteFiles(gd) {
   prepareTitles(gd.photos);
   return [
@@ -612,14 +649,19 @@ export default {
           for (const f of files) {
             if (!f || !UPLOAD_RE.test(f.path || '') || f.path.includes('..') || !/^[0-9a-f]{40}$/.test(f.sha || '')) throw httpError(400, 'Invalid file');
           }
-          const saved = await mutate(env, `Add ${entries.length} photo${entries.length > 1 ? 's' : ''}`, gd => {
+          const saved = await mutate(env, `Add ${entries.length} photo${entries.length > 1 ? 's' : ''}`, async (gd, head) => {
             const known = new Set(gd.photos.map(p => p.id));
             const fresh = entries.filter(e => !known.has(e.id)).map(e => ({ ...e }));
             if (!fresh.length && !files.length) return { files: [], result: gd.photos.filter(p => entries.some(e => e.id === p.id)) };
             assignSlugs(fresh, new Set(gd.photos.map(p => p.slug).filter(Boolean)));
             gd.photos.push(...fresh);
             return {
-              files: [...files.map(f => ({ path: f.path, sha: f.sha })), ...pagesFor(gd.photos, new Set(fresh.map(p => p.slug))), ...siteFiles(gd)],
+              files: [
+                ...files.map(f => ({ path: f.path, sha: f.sha })),
+                ...pagesFor(gd.photos, new Set(fresh.map(p => p.slug))),
+                ...siteFiles(gd),
+                ...await homeFile(env, gd, head),
+              ],
               result: fresh,
             };
           });
@@ -643,7 +685,7 @@ export default {
             const dels = [];
             if (imgPath && IMAGE_RE.test(imgPath) && await exists(env, imgPath, head)) dels.push({ path: imgPath, delete: true });
             if (pagePath && await exists(env, pagePath, head)) dels.push({ path: pagePath, delete: true });
-            return { files: [...dels, ...pagesFor(gd.photos, near), ...siteFiles(gd)], result: target };
+            return { files: [...dels, ...pagesFor(gd.photos, near), ...siteFiles(gd), ...await homeFile(env, gd, head)], result: target };
           });
           if (removed && removed.slug) ctx.waitUntil(pingIndexNow([pageUrl(removed)]));
           return json(env, { ok: true, removed: removed ? 1 : 0 }, 200, origin);

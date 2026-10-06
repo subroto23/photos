@@ -133,6 +133,17 @@ a{text-decoration:none;color:inherit}button{border:none;cursor:pointer;font-fami
 .tl-label-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
 
 /* Masonry — full photos, NO crop */
+/* Static preview shown until the script builds the real gallery (and to crawlers) */
+.static-latest{max-width:1600px;margin:0 auto;padding:10px 32px 32px}
+.static-latest h2{font-family:var(--serif);font-size:1.4rem;font-weight:500;color:var(--ink);margin-bottom:6px}
+.static-latest>p{font-size:.78rem;color:var(--ink3);margin-bottom:16px}
+.static-latest>p a{color:var(--gold)}
+.static-latest ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.static-latest ul a{display:block;border-radius:12px;overflow:hidden;background:var(--bg2);border:1px solid var(--border)}
+.static-latest ul img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;display:block}
+.static-latest ul span{display:block;font-size:.72rem;color:var(--ink2);padding:8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:768px){.static-latest{padding:6px 12px 12px}.static-latest ul{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}}
+
 .sg{columns:4;column-gap:10px;padding:10px 32px 32px}
 
 .sg-item{display:block;break-inside:avoid;position:relative;overflow:hidden;cursor:pointer;background:var(--bg2);margin-bottom:10px;border-radius:12px;border:1px solid transparent;transition:border-color .5s var(--ease),box-shadow .5s var(--ease);perspective:800px}
