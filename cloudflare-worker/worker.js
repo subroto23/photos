@@ -421,7 +421,7 @@ ${more ? `<section class="more"><h2>More photos by Subroto Das</h2><div class="g
 // Crawlers (and AI agents, which don't run JavaScript) otherwise see an empty
 // gallery; the script replaces this with the interactive grid for real visitors.
 const HOME_START = '<!--AUTO:LATEST-->', HOME_END = '<!--/AUTO:LATEST-->';
-const HOME_COUNT = 24;
+const HOME_COUNT = 60; // must match PER_PAGE in script.js so the page doesn't jump
 
 function buildHomeBlock(photos) {
   const list = sortByDate(photos.filter(p => p.slug)).slice(0, HOME_COUNT);
@@ -432,7 +432,8 @@ function buildHomeBlock(photos) {
   ).join('');
   return `${HOME_START}<section class="static-latest"><h2>Latest photos by Subroto Das</h2>`
     + `<p>${photos.length} photos by Subroto Das (সুব্রত দাস) — ${esc(cats.slice(0, 8).join(', '))}. `
-    + `<a href="/all/">Browse all ${photos.length} photos</a>.</p><ul>${items}</ul></section>${HOME_END}`;
+    + `<a href="/all/">See all ${photos.length} photos</a>.</p><ul>${items}</ul>`
+    + `<p class="static-more"><a href="/all/">View all ${photos.length} photos by Subroto Das →</a></p></section>${HOME_END}`;
 }
 
 function injectHome(html, photos) {
@@ -451,9 +452,13 @@ function buildArchive(photos) {
     groups.get(c).push(p);
   }
   const sections = [...groups.entries()].map(([cat, items]) =>
-    `<section><h2>${esc(cat)} <span>${items.length}</span></h2><ul>`
-    + items.map(p => `<li><a href="${esc(pageUrl(p))}">${esc(truncate(titleOf(p), 90))}</a></li>`).join('')
+    `<section id="${esc(slugify(cat) || 'other')}"><h2>${esc(cat)} <span>${items.length}</span></h2><ul>`
+    + items.map(p => `<li><a href="${esc(pageUrl(p))}"><img src="${esc(p.src)}" alt="${esc(altOf(p))}"`
+      + `${p.w && p.h ? ` width="${p.w}" height="${p.h}"` : ''} loading="lazy" decoding="async">`
+      + `<span>${esc(truncate(titleOf(p), 80))}</span></a></li>`).join('')
     + `</ul></section>`).join('\n');
+  const nav = [...groups.entries()].map(([cat, items]) =>
+    `<a href="#${esc(slugify(cat) || 'other')}">${esc(cat)} <b>${items.length}</b></a>`).join('');
   const desc = `Complete index of all ${list.length} photos by Subroto Das (সুব্রত দাস) — travel, food, fashion, portrait, nature and street photography.`;
   const ld = {
     '@context': 'https://schema.org',
@@ -484,22 +489,30 @@ function buildArchive(photos) {
 a{color:inherit;text-decoration:none}a:hover{color:var(--gold)}
 header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .brand{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.3rem}.brand em{color:var(--gold);font-style:italic}
-main{max-width:900px;margin:0 auto;padding:26px 18px 56px}
+main{max-width:1600px;margin:0 auto;padding:26px 18px 56px}
 h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clamp(1.5rem,4vw,2.1rem);margin-bottom:8px}
-.lede{color:var(--ink2);font-size:.9rem;margin-bottom:28px}
-section{margin-bottom:30px}
-h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:1.25rem;color:var(--gold);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
+.lede{color:var(--ink2);font-size:.9rem;margin-bottom:16px}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.jump a{font-size:.72rem;color:var(--ink2);border:1px solid var(--line);border-radius:100px;padding:5px 12px}
+.jump a:hover{color:var(--gold);border-color:var(--gold)}
+.jump b{color:var(--ink3);font-weight:400;font-size:.62rem}
+section{margin-bottom:34px;scroll-margin-top:16px}
+h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:1.25rem;color:var(--gold);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
 h2 span{font-family:Inter,sans-serif;font-size:.65rem;color:var(--ink3);vertical-align:middle;margin-left:4px}
-ul{list-style:none;columns:2;column-gap:26px}
-li{break-inside:avoid;font-size:.82rem;color:var(--ink2);padding:3px 0;overflow-wrap:anywhere}
+ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+li a{display:block;border-radius:12px;overflow:hidden;background:#12100d;border:1px solid var(--line)}
+li a:hover{border-color:rgba(201,162,39,.45)}
+li img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+li span{display:block;font-size:.72rem;color:var(--ink2);padding:8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 footer{text-align:center;font-size:.72rem;color:var(--ink3);padding:26px 18px;border-top:1px solid var(--line)}
-@media(max-width:620px){ul{columns:1}}</style>
+@media(max-width:620px){main{padding:18px 12px 40px}ul{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}}</style>
 </head>
 <body>
 <header><a class="brand" href="/">Subroto Das <em>Photos</em></a><a href="/">← Gallery</a></header>
 <main>
 <h1>All photos by Subroto Das</h1>
 <p class="lede">${esc(desc)}</p>
+<nav class="jump" aria-label="Categories">${nav}</nav>
 ${sections}
 </main>
 <footer>© ${new Date().getFullYear()} Subroto Das · <a href="/">Subroto Das Photos</a> · <a href="https://me.subromart.com">Portfolio</a></footer>
