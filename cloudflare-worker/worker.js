@@ -527,6 +527,8 @@ function buildSitemap(photos) {
   const rows = [
     `<url><loc>${SITE}/</loc><lastmod>${isoDay(new Date())}</lastmod><changefreq>daily</changefreq><priority>1.0</priority>${legacy}</url>`,
     `<url><loc>${SITE}/all/</loc><lastmod>${isoDay(new Date())}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`,
+    // Hand-made share page (mahalaya/index.html); not generated from gallery data.
+    `<url><loc>${SITE}/mahalaya/</loc><lastmod>2026-10-09</lastmod><priority>0.9</priority><image:image><image:loc>${SITE}/photos/general/subroto-das-general-1000046402-1791563686681.jpg</image:loc></image:image></url>`,
   ];
   for (const p of sortByDate(photos.filter(p => p.slug))) {
     rows.push(`<url><loc>${pageUrl(p)}</loc><lastmod>${isoDay(new Date(p.date))}</lastmod><image:image><image:loc>${esc(p.src)}</image:loc></image:image></url>`);
