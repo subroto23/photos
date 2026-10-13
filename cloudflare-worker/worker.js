@@ -421,7 +421,39 @@ ${more ? `<section class="more"><h2>More photos by Subroto Das</h2><div class="g
 // Crawlers (and AI agents, which don't run JavaScript) otherwise see an empty
 // gallery; the script replaces this with the interactive grid for real visitors.
 const HOME_START = '<!--AUTO:LATEST-->', HOME_END = '<!--/AUTO:LATEST-->';
+const HERO_START = '<!--AUTO:HERO-->', HERO_END = '<!--/AUTO:HERO-->';
 const HOME_COUNT = 60; // must match PER_PAGE in script.js so the page doesn't jump
+const HERO_COUNT = 12;
+
+// Hero marquee: one photo per category (newest first), round-robin, so the strip
+// stays varied instead of showing a dozen near-identical shots from one upload.
+function heroPicks(photos, limit) {
+  const byCat = new Map();
+  for (const p of sortByDate(photos.filter(p => p.slug))) {
+    const c = p.category || 'General';
+    if (!byCat.has(c)) byCat.set(c, []);
+    byCat.get(c).push(p);
+  }
+  const lanes = [...byCat.values()], out = [];
+  for (let i = 0; out.length < limit && lanes.some(l => l[i]); i++) {
+    for (const lane of lanes) { if (lane[i] && out.length < limit) out.push(lane[i]); }
+  }
+  return out;
+}
+
+// Pure CSS infinite loop: the strip is rendered twice and slid by -50%, so the
+// seam is invisible and it needs no JavaScript at all.
+function buildHero(photos) {
+  const picks = heroPicks(photos, HERO_COUNT);
+  if (picks.length < 3) return '';
+  const card = (p, i, clone) =>
+    `<a class="hero-card" href="${esc(pageUrl(p))}"${clone ? ' aria-hidden="true" tabindex="-1"' : ''}>`
+    + `<img src="${esc(p.src)}" alt="${clone ? '' : esc(altOf(p))}"${p.w && p.h ? ` width="${p.w}" height="${p.h}"` : ''}`
+    + ` loading="${i < 3 && !clone ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${i < 3 && !clone ? 'high' : 'low'}"></a>`;
+  const strip = picks.map((p, i) => card(p, i, false)).join('')
+    + picks.map((p, i) => card(p, i, true)).join('');
+  return `${HERO_START}<div class="hero" aria-label="Photos by Subroto Das"><div class="hero-track">${strip}</div></div>${HERO_END}`;
+}
 
 function buildHomeBlock(photos) {
   const list = sortByDate(photos.filter(p => p.slug)).slice(0, HOME_COUNT);
@@ -436,10 +468,16 @@ function buildHomeBlock(photos) {
     + `<p class="static-more"><a href="/all/">View all ${photos.length} photos by Subroto Das →</a></p></section>${HOME_END}`;
 }
 
+function replaceBlock(html, start, end, content) {
+  const a = html.indexOf(start), b = html.indexOf(end);
+  if (a < 0 || b < 0 || b < a) return null; // markers missing — leave that block alone
+  return html.slice(0, a) + content + html.slice(b + end.length);
+}
+
 function injectHome(html, photos) {
-  const a = html.indexOf(HOME_START), b = html.indexOf(HOME_END);
-  if (a < 0 || b < 0 || b < a) return null; // markers missing — leave index.html alone
-  return html.slice(0, a) + buildHomeBlock(photos) + html.slice(b + HOME_END.length);
+  const withLatest = replaceBlock(html, HOME_START, HOME_END, buildHomeBlock(photos));
+  if (!withLatest) return null;
+  return replaceBlock(withLatest, HERO_START, HERO_END, buildHero(photos)) || withLatest;
 }
 
 // A plain-HTML index of every photo page, so crawlers reach all photos without JS.
