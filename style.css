@@ -137,6 +137,12 @@ a{text-decoration:none;color:inherit}button{border:none;cursor:pointer;font-fami
 .hero{position:relative;overflow:hidden;margin-bottom:4px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
 .hero-track{display:flex;width:max-content;gap:10px;padding:10px 0;animation:heroScroll 70s linear infinite;will-change:transform}
 .hero:hover .hero-track,.hero:focus-within .hero-track{animation-play-state:paused}
+/* With JS the strip becomes a real scroller you can drag/swipe; the script
+   drives the loop instead of the keyframes. */
+.hero.hero-js{overflow-x:auto;scrollbar-width:none;cursor:grab;scroll-behavior:auto;overscroll-behavior-x:contain}
+.hero.hero-js::-webkit-scrollbar{display:none}
+.hero.hero-js:active{cursor:grabbing}
+.hero.hero-js .hero-track{animation:none}
 /* The strip is rendered twice, so sliding exactly half of it loops seamlessly. */
 @keyframes heroScroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(calc(-50% - 5px),0,0)}}
 .hero-card{flex:0 0 auto;display:block;width:240px;height:270px;border-radius:12px;overflow:hidden;background:var(--bg2);border:1px solid var(--border);transition:border-color .3s var(--ease),transform .3s var(--ease)}

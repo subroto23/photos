@@ -28,6 +28,35 @@
     // Init
     window.addEventListener('load', () => { lucide.createIcons(); loadGallery(); checkRoute(); });
 
+    // Hero strip. Without JS the CSS keyframes scroll it; with JS we turn it into a
+    // native scroller so it can be dragged, swiped or flicked, and advance it
+    // ourselves. The photo set is rendered twice, so wrapping at the halfway point
+    // is invisible.
+    (function initHero() {
+        const hero = $('.hero'), track = hero && hero.querySelector('.hero-track');
+        if (!hero || !track) return;
+        hero.classList.add('hero-js');
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const half = () => track.scrollWidth / 2;
+        let held = 0, frac = 0;
+        const wrap = () => { const h = half(); if (h > 0 && hero.scrollLeft >= h) hero.scrollLeft -= h; };
+        const tick = () => {
+            if (!held && !hero.matches(':hover')) {
+                // scrollLeft only moves in whole pixels, so bank the fraction
+                frac += 0.7;
+                const px = Math.floor(frac);
+                if (px) { frac -= px; hero.scrollLeft += px; wrap(); }
+            }
+            requestAnimationFrame(tick);
+        };
+        ['pointerdown', 'touchstart', 'focusin'].forEach(e => hero.addEventListener(e, () => { held++; }, { passive: true }));
+        ['pointerup', 'pointercancel', 'touchend', 'touchcancel', 'focusout'].forEach(e =>
+            hero.addEventListener(e, () => { held = Math.max(0, held - 1); }, { passive: true }));
+        hero.addEventListener('scroll', wrap, { passive: true });
+        requestAnimationFrame(tick);
+    })();
+
     // Hidden route — only accessible via #upload
     function checkRoute() {
         if (location.hash === '#upload') openUploadModal();
