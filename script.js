@@ -38,13 +38,17 @@
         hero.classList.add('hero-js');
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+        const SPEED = 22; // px per second, matched to the CSS marquee
         const half = () => track.scrollWidth / 2;
-        let held = 0, frac = 0;
+        let held = 0, frac = 0, last = 0;
         const wrap = () => { const h = half(); if (h > 0 && hero.scrollLeft >= h) hero.scrollLeft -= h; };
-        const tick = () => {
+        const tick = now => {
+            // seconds since the last frame, so a 120Hz screen is no faster than a 60Hz one
+            const dt = last ? Math.min((now - last) / 1000, 0.1) : 0;
+            last = now;
             if (!held && !hero.matches(':hover')) {
                 // scrollLeft only moves in whole pixels, so bank the fraction
-                frac += 0.7;
+                frac += SPEED * dt;
                 const px = Math.floor(frac);
                 if (px) { frac -= px; hero.scrollLeft += px; wrap(); }
             }
